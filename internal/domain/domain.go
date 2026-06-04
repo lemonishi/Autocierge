@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// Urgency is the priority level assigned to a ticket.
 type Urgency string
 
 const (
@@ -19,6 +20,7 @@ const (
 	UrgencyCritical Urgency = "critical"
 )
 
+// TicketType is the category of issue a ticket represents.
 type TicketType string
 
 const (
@@ -29,6 +31,7 @@ const (
 	TypeGeneral        TicketType = "general"
 )
 
+// Department is the team a ticket is routed to.
 type Department string
 
 const (
@@ -39,6 +42,7 @@ const (
 	DeptSupportTier1 Department = "support_tier1"
 )
 
+// State is the lifecycle stage of a ticket in the orchestration workflow.
 type State string
 
 const (
@@ -68,6 +72,7 @@ func DepartmentForType(t TicketType) Department {
 	}
 }
 
+// ValidUrgency reports whether u is a recognized Urgency value.
 func ValidUrgency(u Urgency) bool {
 	switch u {
 	case UrgencyLow, UrgencyNormal, UrgencyHigh, UrgencyCritical:
@@ -76,6 +81,7 @@ func ValidUrgency(u Urgency) bool {
 	return false
 }
 
+// ValidType reports whether t is a recognized TicketType value.
 func ValidType(t TicketType) bool {
 	switch t {
 	case TypeBilling, TypeTechnical, TypeAccount, TypeFeatureRequest, TypeGeneral:
@@ -84,6 +90,7 @@ func ValidType(t TicketType) bool {
 	return false
 }
 
+// ValidDepartment reports whether d is a recognized Department value.
 func ValidDepartment(d Department) bool {
 	switch d {
 	case DeptBilling, DeptEngineering, DeptAccounts, DeptProduct, DeptSupportTier1:
@@ -100,11 +107,12 @@ type Email struct {
 	ToAddr     string
 	Subject    string
 	Body       string
-	Raw        map[string]any
+	Raw        map[string]any // arbitrary provider metadata, stored as JSONB
 	DedupeKey  string // IMAP message-id or hash(from+subject+body); enforces idempotency
 	ReceivedAt time.Time
 }
 
+// Ticket is the core support request entity tracked through its lifecycle.
 type Ticket struct {
 	ID         uuid.UUID
 	State      State
@@ -124,7 +132,7 @@ type Classification struct {
 	Department Department
 	Confidence float64
 	Reasoning  string
-	ToolsUsed  map[string]any
+	ToolsUsed  map[string]any // arbitrary tool-call metadata, stored as JSONB
 	Model      string
 }
 
