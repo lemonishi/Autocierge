@@ -90,6 +90,16 @@ func ValidType(t TicketType) bool {
 	return false
 }
 
+// ValidState reports whether s is a known ticket state.
+func ValidState(s State) bool {
+	switch s {
+	case StateNew, StateClassifying, StateAwaitingClassificationReview, StateRouted,
+		StateDrafting, StateAwaitingReplyApproval, StateResolved, StateFailed:
+		return true
+	}
+	return false
+}
+
 // ValidDepartment reports whether d is a recognized Department value.
 func ValidDepartment(d Department) bool {
 	switch d {

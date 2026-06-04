@@ -25,3 +25,12 @@ func TestValidUrgency(t *testing.T) {
 		t.Fatal("meltdown should be invalid")
 	}
 }
+
+func TestValidState(t *testing.T) {
+	if !ValidState(StateRouted) {
+		t.Fatal("ROUTED should be valid")
+	}
+	if ValidState("BOGUS") {
+		t.Fatal("BOGUS should be invalid")
+	}
+}

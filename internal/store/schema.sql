@@ -60,3 +60,8 @@ CREATE TABLE IF NOT EXISTS customers (
   tier           TEXT,
   account_status TEXT
 );
+
+CREATE INDEX IF NOT EXISTS idx_emails_ticket_id ON emails(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_classifications_ticket_id ON classifications(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_replies_ticket_id ON replies(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_audit_log_ticket_id ON audit_log(ticket_id);

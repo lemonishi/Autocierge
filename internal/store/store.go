@@ -8,6 +8,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,6 +22,7 @@ var schemaSQL string
 
 var ErrStateConflict = errors.New("ticket not in expected state")
 var ErrNotFound = errors.New("not found")
+var ErrInvalidState = errors.New("invalid target state")
 
 type Store struct {
 	pool *pgxpool.Pool
@@ -54,7 +56,9 @@ func (s *Store) CreateTicketWithEmail(ctx context.Context, source string, e doma
 		var existing uuid.UUID
 		err := tx.QueryRow(ctx, `SELECT ticket_id FROM emails WHERE dedupe_key = $1`, e.DedupeKey).Scan(&existing)
 		if err == nil {
-			_ = tx.Commit(ctx)
+			if err := tx.Commit(ctx); err != nil {
+				return domain.Ticket{}, err
+			}
 			return s.GetTicket(ctx, existing)
 		} else if !errors.Is(err, pgx.ErrNoRows) {
 			return domain.Ticket{}, err
@@ -69,7 +73,10 @@ func (s *Store) CreateTicketWithEmail(ctx context.Context, source string, e doma
 	if err != nil {
 		return domain.Ticket{}, err
 	}
-	rawJSON, _ := json.Marshal(e.Raw)
+	rawJSON, err := json.Marshal(e.Raw)
+	if err != nil {
+		return domain.Ticket{}, fmt.Errorf("marshal raw: %w", err)
+	}
 	_, err = tx.Exec(ctx,
 		`INSERT INTO emails (id, ticket_id, from_addr, to_addr, subject, body, raw, dedupe_key, received_at)
 		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
@@ -118,7 +125,7 @@ func (s *Store) GetEmailByTicket(ctx context.Context, ticketID uuid.UUID) (domai
 	var dedupe *string
 	err := s.pool.QueryRow(ctx,
 		`SELECT id, ticket_id, from_addr, COALESCE(to_addr,''), COALESCE(subject,''), COALESCE(body,''), raw, dedupe_key, received_at
-		 FROM emails WHERE ticket_id = $1`, ticketID).
+		 FROM emails WHERE ticket_id = $1 ORDER BY received_at LIMIT 1`, ticketID).
 		Scan(&e.ID, &e.TicketID, &e.FromAddr, &e.ToAddr, &e.Subject, &e.Body, &rawJSON, &dedupe, &e.ReceivedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return domain.Email{}, ErrNotFound
@@ -150,6 +157,10 @@ type Transition struct {
 
 // Apply performs the transition and writes the audit row in one transaction.
 func (s *Store) Apply(ctx context.Context, tr Transition) error {
+	if !domain.ValidState(tr.To) {
+		return ErrInvalidState
+	}
+
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -180,7 +191,10 @@ func (s *Store) Apply(ctx context.Context, tr Transition) error {
 		return err
 	}
 
-	payloadJSON, _ := json.Marshal(tr.Payload)
+	payloadJSON, err := json.Marshal(tr.Payload)
+	if err != nil {
+		return fmt.Errorf("marshal payload: %w", err)
+	}
 	_, err = tx.Exec(ctx,
 		`INSERT INTO audit_log (id, ticket_id, from_state, to_state, actor, payload)
 		 VALUES ($1,$2,$3,$4,$5,$6)`,
@@ -192,8 +206,11 @@ func (s *Store) Apply(ctx context.Context, tr Transition) error {
 }
 
 func (s *Store) SaveClassification(ctx context.Context, ticketID uuid.UUID, c domain.Classification) error {
-	toolsJSON, _ := json.Marshal(c.ToolsUsed)
-	_, err := s.pool.Exec(ctx,
+	toolsJSON, err := json.Marshal(c.ToolsUsed)
+	if err != nil {
+		return fmt.Errorf("marshal tools_used: %w", err)
+	}
+	_, err = s.pool.Exec(ctx,
 		`INSERT INTO classifications (id, ticket_id, urgency, type, department, confidence, reasoning, tools_used, model)
 		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
 		uuid.New(), ticketID, c.Urgency, c.Type, c.Department, c.Confidence, c.Reasoning, toolsJSON, c.Model)

@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/lemonishi/supportsentinel/internal/domain"
 	"github.com/stretchr/testify/require"
 )
@@ -102,5 +101,3 @@ func TestSaveClassificationAndReply(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, s.FinalizeReply(ctx, id, "approved", "Hi, fixed!"))
 }
-
-var _ uuid.UUID
