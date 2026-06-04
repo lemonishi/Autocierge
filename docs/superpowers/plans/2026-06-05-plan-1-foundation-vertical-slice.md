@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-06-05-supportsentinel-design.md`
 
-**Module path:** `github.com/sathwiik/supportsentinel` (adjust to your actual GitHub repo before pushing; if changed, update every import in this plan accordingly).
+**Module path:** `github.com/lemonishi/supportsentinel`.
 
 ---
 
@@ -51,7 +51,7 @@ internal/httpapi/server_test.go  → end-to-end vertical slice test
 
 Run:
 ```bash
-go mod init github.com/sathwiik/supportsentinel
+go mod init github.com/lemonishi/supportsentinel
 go get github.com/jackc/pgx/v5@latest
 go get github.com/google/uuid@latest
 go get github.com/stretchr/testify@latest
@@ -579,7 +579,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/sathwiik/supportsentinel/internal/domain"
+	"github.com/lemonishi/supportsentinel/internal/domain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -701,7 +701,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/sathwiik/supportsentinel/internal/domain"
+	"github.com/lemonishi/supportsentinel/internal/domain"
 )
 
 //go:embed schema.sql
@@ -978,7 +978,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/sathwiik/supportsentinel/internal/domain"
+	"github.com/lemonishi/supportsentinel/internal/domain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1030,7 +1030,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/sathwiik/supportsentinel/internal/domain"
+	"github.com/lemonishi/supportsentinel/internal/domain"
 )
 
 type Fake struct{}
@@ -1117,7 +1117,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/sathwiik/supportsentinel/internal/domain"
+	"github.com/lemonishi/supportsentinel/internal/domain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1147,7 +1147,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/sathwiik/supportsentinel/internal/domain"
+	"github.com/lemonishi/supportsentinel/internal/domain"
 )
 
 type Alerter interface {
@@ -1208,10 +1208,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sathwiik/supportsentinel/internal/alert"
-	"github.com/sathwiik/supportsentinel/internal/classify"
-	"github.com/sathwiik/supportsentinel/internal/domain"
-	"github.com/sathwiik/supportsentinel/internal/store"
+	"github.com/lemonishi/supportsentinel/internal/alert"
+	"github.com/lemonishi/supportsentinel/internal/classify"
+	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/supportsentinel/internal/store"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1303,9 +1303,9 @@ import (
 	"log"
 
 	"github.com/google/uuid"
-	"github.com/sathwiik/supportsentinel/internal/alert"
-	"github.com/sathwiik/supportsentinel/internal/domain"
-	"github.com/sathwiik/supportsentinel/internal/store"
+	"github.com/lemonishi/supportsentinel/internal/alert"
+	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/supportsentinel/internal/store"
 )
 
 type Orchestrator struct {
@@ -1648,10 +1648,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sathwiik/supportsentinel/internal/alert"
-	"github.com/sathwiik/supportsentinel/internal/classify"
-	"github.com/sathwiik/supportsentinel/internal/orchestrator"
-	"github.com/sathwiik/supportsentinel/internal/store"
+	"github.com/lemonishi/supportsentinel/internal/alert"
+	"github.com/lemonishi/supportsentinel/internal/classify"
+	"github.com/lemonishi/supportsentinel/internal/orchestrator"
+	"github.com/lemonishi/supportsentinel/internal/store"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1743,9 +1743,9 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/sathwiik/supportsentinel/internal/domain"
-	"github.com/sathwiik/supportsentinel/internal/orchestrator"
-	"github.com/sathwiik/supportsentinel/internal/store"
+	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/supportsentinel/internal/orchestrator"
+	"github.com/lemonishi/supportsentinel/internal/store"
 )
 
 func NewServer(o *orchestrator.Orchestrator, s *store.Store) http.Handler {
@@ -1903,12 +1903,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/sathwiik/supportsentinel/internal/alert"
-	"github.com/sathwiik/supportsentinel/internal/classify"
-	"github.com/sathwiik/supportsentinel/internal/config"
-	"github.com/sathwiik/supportsentinel/internal/httpapi"
-	"github.com/sathwiik/supportsentinel/internal/orchestrator"
-	"github.com/sathwiik/supportsentinel/internal/store"
+	"github.com/lemonishi/supportsentinel/internal/alert"
+	"github.com/lemonishi/supportsentinel/internal/classify"
+	"github.com/lemonishi/supportsentinel/internal/config"
+	"github.com/lemonishi/supportsentinel/internal/httpapi"
+	"github.com/lemonishi/supportsentinel/internal/orchestrator"
+	"github.com/lemonishi/supportsentinel/internal/store"
 )
 
 func main() {
