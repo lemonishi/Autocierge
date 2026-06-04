@@ -91,10 +91,11 @@ SOFTWARE.
 PORT=8080
 # HITL classification confidence gate (0..1). Calibrated later via the eval harness (Plan 6).
 CONFIDENCE_THRESHOLD=0.75
-# PostgreSQL connection (prod: Alibaba Cloud RDS)
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/supportsentinel?sslmode=disable
+# PostgreSQL connection (local dev = Homebrew postgresql@16 on port 5433; prod = Alibaba Cloud RDS).
+# Port 5433 because 5432 is held by another app's Docker Postgres on this machine.
+DATABASE_URL=postgres://postgres:postgres@localhost:5433/supportsentinel?sslmode=disable
 # Tests use a separate database; leave unset to SKIP DB-backed tests.
-TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/supportsentinel_test?sslmode=disable
+TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5433/supportsentinel_test?sslmode=disable
 # Qwen / DashScope (added in Plan 2)
 # DASHSCOPE_API_KEY=
 ```
@@ -103,6 +104,13 @@ TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/supportsentinel_te
 
 ```make
 .PHONY: dev test test-db build tidy
+
+# Auto-load app.env (gitignored) so DATABASE_URL / TEST_DATABASE_URL are set
+# without manual exporting. Override per-invocation by setting the var inline.
+ifneq (,$(wildcard ./app.env))
+include app.env
+export
+endif
 
 tidy:
 	go mod tidy
@@ -113,13 +121,15 @@ dev:
 build:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/server ./cmd/server
 
-# Unit tests + DB-backed tests (set TEST_DATABASE_URL to enable the latter).
+# Unit tests + DB-backed tests (DB tests run when TEST_DATABASE_URL is set,
+# which it is via app.env above; otherwise they skip).
 test:
 	go test ./...
 
-# Convenience: create the local test database (requires a running local Postgres).
+# Convenience: create the local dev + test databases on the Homebrew instance (port 5433).
 test-db:
-	createdb supportsentinel_test || true
+	/opt/homebrew/opt/postgresql@16/bin/createdb -h localhost -p 5433 -O postgres supportsentinel || true
+	/opt/homebrew/opt/postgresql@16/bin/createdb -h localhost -p 5433 -O postgres supportsentinel_test || true
 ```
 
 - [ ] **Step 5: Create seeded `CLAUDE.md`**
