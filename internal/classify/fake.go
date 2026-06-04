@@ -10,8 +10,12 @@ import (
 	"github.com/lemonishi/supportsentinel/internal/domain"
 )
 
+var _ domain.Classifier = (*Fake)(nil)
+
+// Fake is a deterministic, keyword-based Classifier used for testing.
 type Fake struct{}
 
+// NewFake returns a new Fake classifier.
 func NewFake() *Fake { return &Fake{} }
 
 func (f *Fake) Classify(_ context.Context, e domain.Email) (domain.Classification, error) {
