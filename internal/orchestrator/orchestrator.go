@@ -69,6 +69,8 @@ func (o *Orchestrator) runClassify(ctx context.Context, ticketID uuid.UUID) erro
 	}
 
 	urg, typ, dep, conf := c.Urgency, c.Type, c.Department, c.Confidence
+	// Park if critical, or if confidence is strictly below threshold
+	// (confidence == threshold is treated as confident enough to auto-route).
 	parks := c.Urgency == domain.UrgencyCritical || c.Confidence < o.threshold
 	if parks {
 		if err := o.store.Apply(ctx, store.Transition{
@@ -81,7 +83,9 @@ func (o *Orchestrator) runClassify(ctx context.Context, ticketID uuid.UUID) erro
 		}
 		if c.Urgency == domain.UrgencyCritical {
 			tk, err := o.store.GetTicket(ctx, ticketID)
-			if err == nil {
+			if err != nil {
+				log.Printf("alert: GetTicket %s failed: %v; skipping alert", ticketID, err)
+			} else {
 				_ = o.alerter.Alert(ctx, tk) // best-effort
 			}
 		}
