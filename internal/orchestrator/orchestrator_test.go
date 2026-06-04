@@ -102,3 +102,54 @@ func TestIngestLowConfidenceParksAtReview(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, domain.StateAwaitingClassificationReview, got.State)
 }
+
+func TestReviewClassificationRoutesAndDrafts(t *testing.T) {
+	o, s, _ := newOrch(t)
+	ctx := context.Background()
+	tk, err := o.Ingest(ctx, "http", domain.Email{
+		FromAddr: "c@x.com", Subject: "hello", Body: "I have a thing", DedupeKey: "r1",
+	})
+	require.NoError(t, err)
+	require.Equal(t, domain.StateAwaitingClassificationReview, tk.State)
+
+	err = o.ReviewClassification(ctx, tk.ID, ReviewDecision{
+		Urgency: domain.UrgencyNormal, Type: domain.TypeAccount, Department: domain.DeptAccounts,
+	}, "alice")
+	require.NoError(t, err)
+
+	got, err := s.GetTicket(ctx, tk.ID)
+	require.NoError(t, err)
+	require.Equal(t, domain.StateAwaitingReplyApproval, got.State)
+	require.Equal(t, domain.TypeAccount, got.Type)
+}
+
+func TestApproveReplyResolves(t *testing.T) {
+	o, s, _ := newOrch(t)
+	ctx := context.Background()
+	tk, err := o.Ingest(ctx, "http", domain.Email{
+		FromAddr: "c@x.com", Subject: "invoice", Body: "charged twice", DedupeKey: "r2",
+	})
+	require.NoError(t, err)
+	require.Equal(t, domain.StateAwaitingReplyApproval, tk.State)
+
+	err = o.ApproveReply(ctx, tk.ID, "Resolved your billing issue.", "bob")
+	require.NoError(t, err)
+	got, err := s.GetTicket(ctx, tk.ID)
+	require.NoError(t, err)
+	require.Equal(t, domain.StateResolved, got.State)
+}
+
+func TestRejectReplyReturnsToDrafting(t *testing.T) {
+	o, s, _ := newOrch(t)
+	ctx := context.Background()
+	tk, err := o.Ingest(ctx, "http", domain.Email{
+		FromAddr: "c@x.com", Subject: "invoice", Body: "charged twice", DedupeKey: "r3",
+	})
+	require.NoError(t, err)
+
+	require.NoError(t, o.RejectReply(ctx, tk.ID, "bob"))
+	got, err := s.GetTicket(ctx, tk.ID)
+	require.NoError(t, err)
+	// Re-draft runs immediately, so it parks at reply approval again.
+	require.Equal(t, domain.StateAwaitingReplyApproval, got.State)
+}

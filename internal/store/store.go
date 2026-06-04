@@ -260,6 +260,16 @@ func (s *Store) AuditLog(ctx context.Context, ticketID uuid.UUID) ([]AuditRow, e
 	return out, rows.Err()
 }
 
+func (s *Store) LatestReplyID(ctx context.Context, ticketID uuid.UUID) (uuid.UUID, error) {
+	var id uuid.UUID
+	err := s.pool.QueryRow(ctx,
+		`SELECT id FROM replies WHERE ticket_id=$1 ORDER BY created_at DESC LIMIT 1`, ticketID).Scan(&id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return uuid.Nil, ErrNotFound
+	}
+	return id, err
+}
+
 func nullStr(s string) any {
 	if s == "" {
 		return nil
