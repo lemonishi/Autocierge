@@ -129,3 +129,94 @@ func (o *Orchestrator) runDraft(ctx context.Context, ticketID uuid.UUID) error {
 		TicketID: ticketID, From: domain.StateDrafting, To: domain.StateAwaitingReplyApproval, Actor: "system",
 	})
 }
+
+// ReviewDecision is the human's Checkpoint-1 input. Empty fields fall back to
+// the model's stored values (handled by COALESCE in Apply when pointers are nil).
+type ReviewDecision struct {
+	Urgency    domain.Urgency
+	Type       domain.TicketType
+	Department domain.Department
+}
+
+// ReviewClassification (Checkpoint 1): a human confirms/overrides the routing,
+// after which the ticket routes and a reply is drafted.
+func (o *Orchestrator) ReviewClassification(ctx context.Context, ticketID uuid.UUID, d ReviewDecision, reviewer string) error {
+	tr := store.Transition{
+		TicketID: ticketID, From: domain.StateAwaitingClassificationReview,
+		To: domain.StateRouted, Actor: "human:" + reviewer, Payload: d,
+	}
+	if d.Urgency != "" {
+		u := d.Urgency
+		tr.SetUrgency = &u
+	}
+	if d.Type != "" {
+		t := d.Type
+		tr.SetType = &t
+	}
+	if d.Department != "" {
+		dep := d.Department
+		tr.SetDepartment = &dep
+	}
+	if err := o.store.Apply(ctx, tr); err != nil {
+		return err
+	}
+	return o.runDraft(ctx, ticketID)
+}
+
+// ApproveReply (Checkpoint 2): human approves/edits the draft; ticket resolves.
+func (o *Orchestrator) ApproveReply(ctx context.Context, ticketID uuid.UUID, finalText, reviewer string) error {
+	replyID, err := o.store.LatestReplyID(ctx, ticketID)
+	if err != nil {
+		return err
+	}
+	if err := o.store.FinalizeReply(ctx, replyID, "approved", finalText); err != nil {
+		return err
+	}
+	return o.store.Apply(ctx, store.Transition{
+		TicketID: ticketID, From: domain.StateAwaitingReplyApproval,
+		To: domain.StateResolved, Actor: "human:" + reviewer,
+		Payload: map[string]any{"final_text": finalText},
+	})
+}
+
+// RejectReply (Checkpoint 2): human rejects the draft; re-draft and park again.
+func (o *Orchestrator) RejectReply(ctx context.Context, ticketID uuid.UUID, reviewer string) error {
+	replyID, err := o.store.LatestReplyID(ctx, ticketID)
+	if err != nil {
+		return err
+	}
+	if err := o.store.FinalizeReply(ctx, replyID, "rejected", ""); err != nil {
+		return err
+	}
+	if err := o.store.Apply(ctx, store.Transition{
+		TicketID: ticketID, From: domain.StateAwaitingReplyApproval,
+		To: domain.StateDrafting, Actor: "human:" + reviewer,
+	}); err != nil {
+		return err
+	}
+	// Re-draft from DRAFTING. runDraft expects ROUTED→DRAFTING, so issue the draft directly here.
+	return o.redraftFromDrafting(ctx, ticketID)
+}
+
+// redraftFromDrafting drafts a reply when already in DRAFTING and parks for approval.
+func (o *Orchestrator) redraftFromDrafting(ctx context.Context, ticketID uuid.UUID) error {
+	tk, err := o.store.GetTicket(ctx, ticketID)
+	if err != nil {
+		return err
+	}
+	email, err := o.store.GetEmailByTicket(ctx, ticketID)
+	if err != nil {
+		return err
+	}
+	draft, err := o.clf.DraftReply(ctx, tk, email)
+	if err != nil {
+		draft = ""
+	}
+	if _, err := o.store.SaveReplyDraft(ctx, ticketID, draft); err != nil {
+		return err
+	}
+	return o.store.Apply(ctx, store.Transition{
+		TicketID: ticketID, From: domain.StateDrafting,
+		To: domain.StateAwaitingReplyApproval, Actor: "system",
+	})
+}
