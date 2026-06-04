@@ -42,6 +42,9 @@ func New(ctx context.Context, url string) (*Store, error) {
 
 func (s *Store) Close() { s.pool.Close() }
 
+// Pool exposes the underlying pool for test setup/teardown. Not for app use.
+func (s *Store) Pool() *pgxpool.Pool { return s.pool }
+
 // CreateTicketWithEmail inserts a NEW ticket plus its email atomically. If an
 // email with the same DedupeKey already exists, it returns the existing ticket
 // (idempotent ingestion).
