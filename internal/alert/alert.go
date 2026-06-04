@@ -13,6 +13,11 @@ type Alerter interface {
 	Alert(ctx context.Context, t domain.Ticket) error
 }
 
+var (
+	_ Alerter = (*Log)(nil)
+	_ Alerter = (*Recording)(nil)
+)
+
 // Log writes alerts to stdout (default impl until Plan 5).
 type Log struct{}
 
