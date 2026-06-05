@@ -4,6 +4,7 @@ package httpapi
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -34,6 +35,19 @@ func writeTicket(w http.ResponseWriter, t domain.Ticket) {
 	})
 }
 
+func writeErr(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, orchestrator.ErrInvalidReview), errors.Is(err, orchestrator.ErrEmptyReply):
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+	case errors.Is(err, store.ErrStateConflict):
+		writeJSON(w, http.StatusConflict, map[string]string{"error": err.Error()})
+	case errors.Is(err, store.ErrNotFound):
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+	default:
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+}
+
 func writeJSON(w http.ResponseWriter, code int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
@@ -41,7 +55,12 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 }
 
 func (h *handlers) submitEmail(w http.ResponseWriter, r *http.Request) {
-	var in struct{ From, To, Subject, Body string }
+	var in struct {
+		From    string `json:"from"`
+		To      string `json:"to"`
+		Subject string `json:"subject"`
+		Body    string `json:"body"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
@@ -70,7 +89,7 @@ func (h *handlers) getTicket(w http.ResponseWriter, r *http.Request) {
 	}
 	tk, err := h.s.GetTicket(r.Context(), id)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		writeErr(w, err)
 		return
 	}
 	writeTicket(w, tk)
@@ -82,17 +101,29 @@ func (h *handlers) reviewClassification(w http.ResponseWriter, r *http.Request) 
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "bad id"})
 		return
 	}
-	var in struct{ Urgency, Type, Department, Reviewer string }
-	_ = json.NewDecoder(r.Body).Decode(&in)
+	var in struct {
+		Urgency    string `json:"urgency"`
+		Type       string `json:"type"`
+		Department string `json:"department"`
+		Reviewer   string `json:"reviewer"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return
+	}
 	err = h.o.ReviewClassification(r.Context(), id, orchestrator.ReviewDecision{
 		Urgency: domain.Urgency(in.Urgency), Type: domain.TicketType(in.Type),
 		Department: domain.Department(in.Department),
 	}, fallback(in.Reviewer, "anon"))
 	if err != nil {
-		writeJSON(w, http.StatusConflict, map[string]string{"error": err.Error()})
+		writeErr(w, err)
 		return
 	}
-	tk, _ := h.s.GetTicket(r.Context(), id)
+	tk, err := h.s.GetTicket(r.Context(), id)
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
 	writeTicket(w, tk)
 }
 
@@ -119,10 +150,14 @@ func (h *handlers) replyApproval(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		writeJSON(w, http.StatusConflict, map[string]string{"error": err.Error()})
+		writeErr(w, err)
 		return
 	}
-	tk, _ := h.s.GetTicket(r.Context(), id)
+	tk, err := h.s.GetTicket(r.Context(), id)
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
 	writeTicket(w, tk)
 }
 

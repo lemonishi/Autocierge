@@ -63,6 +63,28 @@ func TestEndToEndSliceAutoRouteThenApprove(t *testing.T) {
 	require.Equal(t, "RESOLVED", approved["state"])
 }
 
+func TestEndToEndSliceRejectThenApprove(t *testing.T) {
+	srv := newTestServer(t)
+
+	created := postJSON(t, srv.URL+"/api/emails", map[string]string{
+		"from": "cust@acme.com", "subject": "invoice issue", "body": "charged twice",
+	})
+	id := created["id"].(string)
+	require.Equal(t, "AWAITING_REPLY_APPROVAL", created["state"])
+
+	// Reject the draft → re-draft → parks at reply approval again.
+	rejected := postJSON(t, srv.URL+"/api/tickets/"+id+"/reply-approval", map[string]string{
+		"action": "reject", "reviewer": "alice",
+	})
+	require.Equal(t, "AWAITING_REPLY_APPROVAL", rejected["state"])
+
+	// Now approve → RESOLVED.
+	approved := postJSON(t, srv.URL+"/api/tickets/"+id+"/reply-approval", map[string]string{
+		"action": "approve", "final_text": "Sorted now.", "reviewer": "alice",
+	})
+	require.Equal(t, "RESOLVED", approved["state"])
+}
+
 func TestEndToEndSliceCriticalReviewThenApprove(t *testing.T) {
 	srv := newTestServer(t)
 

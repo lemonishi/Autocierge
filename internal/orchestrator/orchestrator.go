@@ -17,6 +17,12 @@ import (
 	"github.com/lemonishi/supportsentinel/internal/store"
 )
 
+// ErrInvalidReview is returned when a human review decision contains an invalid enum value.
+var ErrInvalidReview = errors.New("invalid review decision")
+
+// ErrEmptyReply is returned when an approved reply has no text.
+var ErrEmptyReply = errors.New("final reply text must not be empty")
+
 type Orchestrator struct {
 	store     *store.Store
 	clf       domain.Classifier
@@ -152,13 +158,13 @@ type ReviewDecision struct {
 // after which the ticket routes and a reply is drafted.
 func (o *Orchestrator) ReviewClassification(ctx context.Context, ticketID uuid.UUID, d ReviewDecision, reviewer string) error {
 	if d.Urgency != "" && !domain.ValidUrgency(d.Urgency) {
-		return fmt.Errorf("invalid urgency: %q", d.Urgency)
+		return fmt.Errorf("%w: urgency %q", ErrInvalidReview, d.Urgency)
 	}
 	if d.Type != "" && !domain.ValidType(d.Type) {
-		return fmt.Errorf("invalid type: %q", d.Type)
+		return fmt.Errorf("%w: type %q", ErrInvalidReview, d.Type)
 	}
 	if d.Department != "" && !domain.ValidDepartment(d.Department) {
-		return fmt.Errorf("invalid department: %q", d.Department)
+		return fmt.Errorf("%w: department %q", ErrInvalidReview, d.Department)
 	}
 	tr := store.Transition{
 		TicketID: ticketID, From: domain.StateAwaitingClassificationReview,
@@ -185,7 +191,7 @@ func (o *Orchestrator) ReviewClassification(ctx context.Context, ticketID uuid.U
 // ApproveReply (Checkpoint 2): human approves/edits the draft; ticket resolves.
 func (o *Orchestrator) ApproveReply(ctx context.Context, ticketID uuid.UUID, finalText, reviewer string) error {
 	if strings.TrimSpace(finalText) == "" {
-		return errors.New("final reply text must not be empty")
+		return ErrEmptyReply
 	}
 	replyID, err := o.store.LatestReplyID(ctx, ticketID)
 	if err != nil {
