@@ -48,11 +48,26 @@ func TestDoChatRetriesOn500ThenSucceeds(t *testing.T) {
 }
 
 func TestDoChatReturnsErrorAfterExhaustingRetries(t *testing.T) {
+	var calls int32
 	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&calls, 1)
 		w.WriteHeader(http.StatusBadGateway)
 	})
 	_, err := c.doChat(context.Background(), []chatMessage{{Role: "user", Content: "hi"}}, false)
 	require.Error(t, err)
+	require.Equal(t, int32(3), atomic.LoadInt32(&calls))
+}
+
+func TestDoChatRespectsContextCancellation(t *testing.T) {
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError) // retryable, so it would loop
+	})
+	c.retryBackoff = 50 * time.Millisecond
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // cancel before the call
+	_, err := c.doChat(ctx, []chatMessage{{Role: "user", Content: "hi"}}, false)
+	require.Error(t, err)
+	require.ErrorIs(t, err, context.Canceled)
 }
 
 func TestDoChatDoesNotRetryOn400(t *testing.T) {

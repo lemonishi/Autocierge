@@ -34,7 +34,7 @@ type Client struct {
 	apiKey       string
 	baseURL      string
 	model        string
-	http         *http.Client
+	httpClient   *http.Client
 	retryBackoff time.Duration // initial backoff; doubles each retry
 }
 
@@ -56,7 +56,7 @@ func New(apiKey, baseURL, model string, httpClient *http.Client) *Client {
 		apiKey:       apiKey,
 		baseURL:      baseURL,
 		model:        model,
-		http:         httpClient,
+		httpClient:   httpClient,
 		retryBackoff: 500 * time.Millisecond,
 	}
 }
@@ -101,17 +101,21 @@ func (c *Client) doChat(ctx context.Context, messages []chatMessage, jsonMode bo
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/chat/completions", bytes.NewReader(payload))
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("build dashscope request: %w", err)
 		}
 		req.Header.Set("Authorization", "Bearer "+c.apiKey)
 		req.Header.Set("Content-Type", "application/json")
 
-		resp, err := c.http.Do(req)
+		resp, err := c.httpClient.Do(req)
 		if err != nil {
 			lastErr = err
 			if attempt < maxAttempts {
-				time.Sleep(backoff)
-				backoff *= 2
+				select {
+				case <-time.After(backoff):
+					backoff *= 2
+				case <-ctx.Done():
+					return "", fmt.Errorf("dashscope request cancelled: %w", ctx.Err())
+				}
 			}
 			continue
 		}
@@ -121,8 +125,12 @@ func (c *Client) doChat(ctx context.Context, messages []chatMessage, jsonMode bo
 		if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500 {
 			lastErr = fmt.Errorf("dashscope status %d: %s", resp.StatusCode, string(body))
 			if attempt < maxAttempts {
-				time.Sleep(backoff)
-				backoff *= 2
+				select {
+				case <-time.After(backoff):
+					backoff *= 2
+				case <-ctx.Done():
+					return "", fmt.Errorf("dashscope request cancelled: %w", ctx.Err())
+				}
 			}
 			continue
 		}
