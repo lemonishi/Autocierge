@@ -144,6 +144,15 @@ func TestClassifyClampsConfidence(t *testing.T) {
 	require.Equal(t, 1.0, got.Confidence)
 }
 
+func TestClassifyClampsNegativeConfidence(t *testing.T) {
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(chatReply(`{"urgency":"low","type":"general","department":"support_tier1","confidence":-0.5}`)))
+	})
+	got, err := c.Classify(context.Background(), domain.Email{Subject: "hi", Body: "x"})
+	require.NoError(t, err)
+	require.Equal(t, 0.0, got.Confidence)
+}
+
 func TestClassifyStripsCodeFences(t *testing.T) {
 	fenced := "```json\n" + validClassificationJSON() + "\n```"
 	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
@@ -156,8 +165,17 @@ func TestClassifyStripsCodeFences(t *testing.T) {
 
 func TestClassifyRepromptsOnMalformedThenSucceeds(t *testing.T) {
 	var calls int32
+	var secondRoles []string
 	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
-		if atomic.AddInt32(&calls, 1) == 1 {
+		n := atomic.AddInt32(&calls, 1)
+		if n == 2 {
+			var body chatRequest
+			_ = json.NewDecoder(r.Body).Decode(&body)
+			for _, m := range body.Messages {
+				secondRoles = append(secondRoles, m.Role)
+			}
+		}
+		if n == 1 {
 			w.Write([]byte(chatReply("not json at all")))
 			return
 		}
@@ -166,7 +184,8 @@ func TestClassifyRepromptsOnMalformedThenSucceeds(t *testing.T) {
 	got, err := c.Classify(context.Background(), domain.Email{Subject: "x", Body: "y"})
 	require.NoError(t, err)
 	require.Equal(t, domain.TypeBilling, got.Type)
-	require.Equal(t, int32(2), atomic.LoadInt32(&calls)) // re-prompted once
+	require.Equal(t, int32(2), atomic.LoadInt32(&calls))
+	require.Equal(t, []string{"system", "user", "assistant", "user"}, secondRoles)
 }
 
 func TestClassifyErrorsOnPersistentMalformed(t *testing.T) {

@@ -244,9 +244,16 @@ func stripCodeFences(s string) string {
 	if !strings.HasPrefix(s, "```") {
 		return s
 	}
-	s = strings.TrimPrefix(s, "```json")
-	s = strings.TrimPrefix(s, "```")
-	s = strings.TrimSuffix(strings.TrimSpace(s), "```")
+	s = s[3:] // drop the opening ```
+	// Drop an optional language tag on the first line (e.g. "json"/"JSON").
+	if nl := strings.IndexByte(s, '\n'); nl != -1 {
+		firstLine := strings.TrimSpace(s[:nl])
+		if firstLine == "" || !strings.ContainsAny(firstLine, "{[") {
+			s = s[nl+1:]
+		}
+	}
+	s = strings.TrimSpace(s)
+	s = strings.TrimSuffix(s, "```")
 	return strings.TrimSpace(s)
 }
 
