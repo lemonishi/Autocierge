@@ -27,7 +27,8 @@ const (
 	// DefaultModel is the default Qwen model for classification.
 	DefaultModel = "qwen-max"
 
-	maxAttempts = 3
+	maxAttempts      = 3
+	maxToolIterations = 5
 )
 
 // ToolDefinition is a function-calling tool the model may invoke during Classify.
@@ -229,37 +230,68 @@ Use "critical" only for outages, data loss, or urgent business impact.`
 
 const reclassifyPrompt = `Your previous response was not valid JSON in the required schema. Respond again with ONLY the JSON object described, nothing else.`
 
-// Classify asks Qwen to classify the email and returns a validated Classification.
-// On malformed/invalid output it re-prompts once; if still bad it returns an error
-// (the orchestrator parks such tickets for human review — fail toward a human).
+// Classify asks Qwen to classify the email. When a ToolBox is attached it runs a
+// function-calling loop: it offers the tools, executes any tool_calls the model
+// requests (recording them in ToolsUsed), and finishes when the model returns the
+// final JSON classification. With no ToolBox it is a single-shot call. On
+// malformed/invalid output it re-prompts once; persistent failure returns an
+// error so the orchestrator parks the ticket for human review (fail toward a human).
 func (c *Client) Classify(ctx context.Context, e domain.Email) (domain.Classification, error) {
 	messages := []chatMessage{
 		{Role: "system", Content: classifySystemPrompt},
 		{Role: "user", Content: fmt.Sprintf("Subject: %s\n\nBody:\n%s", e.Subject, e.Body)},
 	}
-
-	content, err := c.doChat(ctx, messages, true)
-	if err != nil {
-		return domain.Classification{}, err
+	var tools []toolDef
+	if c.tools != nil {
+		tools = toToolDefs(c.tools.Definitions())
 	}
-	cl, perr := parseClassification(content)
-	if perr != nil {
-		// One re-prompt with the schema reminder.
-		messages = append(messages,
-			chatMessage{Role: "assistant", Content: content},
-			chatMessage{Role: "user", Content: reclassifyPrompt},
-		)
-		content, err = c.doChat(ctx, messages, true)
+	// JSON-mode only when no tools are offered (response_format + tools can conflict;
+	// with tools we rely on the prompt + validation + re-prompt instead).
+	jsonMode := len(tools) == 0
+
+	toolsUsed := map[string]any{}
+	repromptUsed := false
+
+	for iter := 0; iter < maxToolIterations; iter++ {
+		msg, err := c.doChatRaw(ctx, messages, jsonMode, tools)
 		if err != nil {
 			return domain.Classification{}, err
 		}
-		cl, perr = parseClassification(content)
-		if perr != nil {
-			return domain.Classification{}, fmt.Errorf("invalid classification after re-prompt: %w", perr)
+
+		if len(msg.ToolCalls) > 0 {
+			messages = append(messages, msg) // the assistant's tool-call turn
+			for _, tc := range msg.ToolCalls {
+				result, ierr := c.tools.Invoke(ctx, tc.Function.Name, tc.Function.Arguments)
+				if ierr != nil {
+					result = fmt.Sprintf("error: %v", ierr)
+				}
+				toolsUsed[tc.Function.Name] = map[string]any{
+					"arguments": tc.Function.Arguments,
+					"result":    result,
+				}
+				messages = append(messages, chatMessage{
+					Role: "tool", ToolCallID: tc.ID, Content: result,
+				})
+			}
+			continue
 		}
+
+		cl, perr := parseClassification(msg.Content)
+		if perr != nil {
+			if repromptUsed {
+				return domain.Classification{}, fmt.Errorf("invalid classification after re-prompt: %w", perr)
+			}
+			repromptUsed = true
+			messages = append(messages, msg, chatMessage{Role: "user", Content: reclassifyPrompt})
+			continue
+		}
+		cl.Model = c.model
+		if len(toolsUsed) > 0 {
+			cl.ToolsUsed = toolsUsed
+		}
+		return cl, nil
 	}
-	cl.Model = c.model
-	return cl, nil
+	return domain.Classification{}, fmt.Errorf("classification exceeded %d tool iterations", maxToolIterations)
 }
 
 // parseClassification parses and validates the model's JSON against the fixed
