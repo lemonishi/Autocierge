@@ -6,8 +6,11 @@ Plans: `docs/superpowers/plans/`.
 
 ## Stack
 - Backend: Go 1.22+ (net/http ServeMux, jackc/pgx v5, google/uuid, testify).
-- AI core: Qwen via Alibaba Cloud DashScope (added in Plan 2). The Qwen client
-  (`internal/qwen/client.go`) is the primary "Proof of Alibaba Cloud" artifact.
+- AI core: Qwen via Alibaba Cloud DashScope — IMPLEMENTED in `internal/qwen/client.go`
+  (the primary "Proof of Alibaba Cloud" artifact). OpenAI-compatible endpoint,
+  JSON-mode classification with validation + one re-prompt, free-text drafts,
+  bounded retry. `cmd/server` uses it when `DASHSCOPE_API_KEY` is set, else the
+  fake classifier. Live smoke test: `go test -tags live ./internal/qwen/`.
 - DB: PostgreSQL (local for dev/test; Alibaba Cloud RDS in prod).
 - Frontend: React, built and embedded via `//go:embed` (Plan 4).
 - Deploy: NO Docker. Single Go binary + systemd + nginx on Alibaba Cloud ECS (Plan 7).
