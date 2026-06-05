@@ -138,7 +138,10 @@ func (h *handlers) replyApproval(w http.ResponseWriter, r *http.Request) {
 		FinalText string `json:"final_text"`
 		Reviewer  string `json:"reviewer"`
 	}
-	_ = json.NewDecoder(r.Body).Decode(&in)
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return
+	}
 	rev := fallback(in.Reviewer, "anon")
 	switch in.Action {
 	case "approve":

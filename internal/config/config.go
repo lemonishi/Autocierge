@@ -27,6 +27,9 @@ func Load() (Config, error) {
 		if err != nil {
 			return Config{}, errors.New("CONFIDENCE_THRESHOLD must be a float")
 		}
+		if f < 0 || f > 1 {
+			return Config{}, errors.New("CONFIDENCE_THRESHOLD must be between 0 and 1")
+		}
 		c.ConfidenceThreshold = f
 	}
 	return c, nil

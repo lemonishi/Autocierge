@@ -25,3 +25,13 @@ func TestLoadRequiresDatabaseURL(t *testing.T) {
 		t.Fatal("expected error when DATABASE_URL is empty")
 	}
 }
+
+func TestLoadRejectsOutOfRangeThreshold(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	for _, v := range []string{"-0.1", "1.5"} {
+		t.Setenv("CONFIDENCE_THRESHOLD", v)
+		if _, err := Load(); err == nil {
+			t.Fatalf("expected error for out-of-range CONFIDENCE_THRESHOLD=%q", v)
+		}
+	}
+}
