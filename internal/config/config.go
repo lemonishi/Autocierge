@@ -11,6 +11,9 @@ type Config struct {
 	Port                string
 	DatabaseURL         string
 	ConfidenceThreshold float64
+	DashScopeAPIKey     string
+	DashScopeBaseURL    string
+	QwenModel           string
 }
 
 func Load() (Config, error) {
@@ -32,6 +35,9 @@ func Load() (Config, error) {
 		}
 		c.ConfidenceThreshold = f
 	}
+	c.DashScopeAPIKey = os.Getenv("DASHSCOPE_API_KEY")
+	c.DashScopeBaseURL = getenv("DASHSCOPE_BASE_URL", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1")
+	c.QwenModel = getenv("QWEN_MODEL", "qwen-max")
 	return c, nil
 }
 
