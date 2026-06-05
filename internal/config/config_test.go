@@ -35,3 +35,41 @@ func TestLoadRejectsOutOfRangeThreshold(t *testing.T) {
 		}
 	}
 }
+
+func TestLoadDashScopeDefaults(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("DASHSCOPE_API_KEY", "sk-test")
+	t.Setenv("DASHSCOPE_BASE_URL", "")
+	t.Setenv("QWEN_MODEL", "")
+
+	c, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if c.DashScopeAPIKey != "sk-test" {
+		t.Fatalf("DashScopeAPIKey = %q", c.DashScopeAPIKey)
+	}
+	if c.DashScopeBaseURL != "https://dashscope-intl.aliyuncs.com/compatible-mode/v1" {
+		t.Fatalf("DashScopeBaseURL default = %q", c.DashScopeBaseURL)
+	}
+	if c.QwenModel != "qwen-max" {
+		t.Fatalf("QwenModel default = %q", c.QwenModel)
+	}
+}
+
+func TestLoadDashScopeOverrides(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("DASHSCOPE_BASE_URL", "https://example/v1")
+	t.Setenv("QWEN_MODEL", "qwen-plus")
+
+	c, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if c.DashScopeBaseURL != "https://example/v1" {
+		t.Fatalf("DashScopeBaseURL override = %q", c.DashScopeBaseURL)
+	}
+	if c.QwenModel != "qwen-plus" {
+		t.Fatalf("QwenModel override = %q", c.QwenModel)
+	}
+}

@@ -9,8 +9,10 @@ import (
 	"github.com/lemonishi/supportsentinel/internal/alert"
 	"github.com/lemonishi/supportsentinel/internal/classify"
 	"github.com/lemonishi/supportsentinel/internal/config"
+	"github.com/lemonishi/supportsentinel/internal/domain"
 	"github.com/lemonishi/supportsentinel/internal/httpapi"
 	"github.com/lemonishi/supportsentinel/internal/orchestrator"
+	"github.com/lemonishi/supportsentinel/internal/qwen"
 	"github.com/lemonishi/supportsentinel/internal/store"
 )
 
@@ -26,8 +28,15 @@ func main() {
 	}
 	defer s.Close()
 
-	// Plan 1 uses the fake classifier; Plan 2 swaps in the Qwen client.
-	o := orchestrator.New(s, classify.NewFake(), alert.NewLog(), cfg.ConfidenceThreshold)
+	var clf domain.Classifier
+	if cfg.DashScopeAPIKey != "" {
+		clf = qwen.New(cfg.DashScopeAPIKey, cfg.DashScopeBaseURL, cfg.QwenModel, nil)
+		log.Printf("classifier: Qwen via DashScope (model=%s)", cfg.QwenModel)
+	} else {
+		clf = classify.NewFake()
+		log.Printf("classifier: fake (DASHSCOPE_API_KEY not set)")
+	}
+	o := orchestrator.New(s, clf, alert.NewLog(), cfg.ConfidenceThreshold)
 	handler := httpapi.NewServer(o, s)
 	srv := &http.Server{
 		Addr:         ":" + cfg.Port,
