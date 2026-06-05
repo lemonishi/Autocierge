@@ -137,6 +137,14 @@ func TestApproveReplyResolves(t *testing.T) {
 	got, err := s.GetTicket(ctx, tk.ID)
 	require.NoError(t, err)
 	require.Equal(t, domain.StateResolved, got.State)
+
+	var status, final string
+	err = s.Pool().QueryRow(ctx,
+		`SELECT status, COALESCE(final_text,'') FROM replies WHERE ticket_id=$1 ORDER BY created_at DESC LIMIT 1`, tk.ID).
+		Scan(&status, &final)
+	require.NoError(t, err)
+	require.Equal(t, "approved", status)
+	require.Equal(t, "Resolved your billing issue.", final)
 }
 
 func TestRejectReplyReturnsToDrafting(t *testing.T) {
@@ -152,4 +160,34 @@ func TestRejectReplyReturnsToDrafting(t *testing.T) {
 	require.NoError(t, err)
 	// Re-draft runs immediately, so it parks at reply approval again.
 	require.Equal(t, domain.StateAwaitingReplyApproval, got.State)
+
+	var rejectedCount int
+	err = s.Pool().QueryRow(ctx,
+		`SELECT count(*) FROM replies WHERE ticket_id=$1 AND status='rejected'`, tk.ID).Scan(&rejectedCount)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, rejectedCount, 1)
+}
+
+func TestReviewClassificationPartialOverrideKeepsStoredValues(t *testing.T) {
+	o, s, _ := newOrch(t)
+	ctx := context.Background()
+	// Low-confidence ambiguous ticket parks at classification review with the
+	// fake classifier's stored values (TypeGeneral for this subject/body).
+	tk, err := o.Ingest(ctx, "http", domain.Email{
+		FromAddr: "c@x.com", Subject: "hello", Body: "I have a thing", DedupeKey: "po1",
+	})
+	require.NoError(t, err)
+	require.Equal(t, domain.StateAwaitingClassificationReview, tk.State)
+
+	// Override ONLY Department; Urgency and Type are left empty and must fall
+	// back to the classifier's stored values via COALESCE in Apply.
+	err = o.ReviewClassification(ctx, tk.ID, ReviewDecision{
+		Department: domain.DeptEngineering,
+	}, "alice")
+	require.NoError(t, err)
+
+	got, err := s.GetTicket(ctx, tk.ID)
+	require.NoError(t, err)
+	require.Equal(t, domain.TypeGeneral, got.Type)
+	require.Equal(t, domain.DeptEngineering, got.Department)
 }
