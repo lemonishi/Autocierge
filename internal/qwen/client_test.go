@@ -203,3 +203,17 @@ func TestClassifyErrorsOnInvalidEnumAfterReprompt(t *testing.T) {
 	_, err := c.Classify(context.Background(), domain.Email{Subject: "x", Body: "y"})
 	require.Error(t, err)
 }
+
+func TestDraftReplyReturnsText(t *testing.T) {
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		var body chatRequest
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		require.Nil(t, body.ResponseFormat) // draft is free text, not JSON mode
+		w.Write([]byte(chatReply("Hi, we've refunded the duplicate charge. Sorry for the trouble!")))
+	})
+	out, err := c.DraftReply(context.Background(),
+		domain.Ticket{Urgency: domain.UrgencyHigh, Type: domain.TypeBilling},
+		domain.Email{Subject: "charged twice", Body: "double charge"})
+	require.NoError(t, err)
+	require.Contains(t, out, "refunded")
+}

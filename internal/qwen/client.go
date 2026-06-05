@@ -257,7 +257,15 @@ func stripCodeFences(s string) string {
 	return strings.TrimSpace(s)
 }
 
-// DraftReply is implemented in Task 4.
+const draftSystemPrompt = `You are a helpful, professional customer-support agent. Write a concise, empathetic reply to the customer's email. Address their issue directly. Do not invent specific facts (order numbers, dates, amounts) that are not in the email. Sign off as "Support".`
+
+// DraftReply asks Qwen to write a customer-facing reply (free text, not JSON).
 func (c *Client) DraftReply(ctx context.Context, t domain.Ticket, e domain.Email) (string, error) {
-	return "", errors.New("not implemented")
+	user := fmt.Sprintf("Ticket urgency: %s\nTicket type: %s\n\nCustomer email:\nSubject: %s\n\n%s",
+		t.Urgency, t.Type, e.Subject, e.Body)
+	messages := []chatMessage{
+		{Role: "system", Content: draftSystemPrompt},
+		{Role: "user", Content: user},
+	}
+	return c.doChat(ctx, messages, false)
 }
