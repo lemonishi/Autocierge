@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lemonishi/supportsentinel/internal/domain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -106,4 +107,80 @@ func TestDoChatJSONModeSetsResponseFormat(t *testing.T) {
 	})
 	_, err := c.doChat(context.Background(), []chatMessage{{Role: "user", Content: "hi"}}, true)
 	require.NoError(t, err)
+}
+
+func validClassificationJSON() string {
+	return `{"urgency":"high","type":"billing","department":"billing","confidence":0.91,"reasoning":"double charge"}`
+}
+
+func TestClassifyParsesValidResponse(t *testing.T) {
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(chatReply(validClassificationJSON())))
+	})
+	got, err := c.Classify(context.Background(), domain.Email{Subject: "charged twice", Body: "help"})
+	require.NoError(t, err)
+	require.Equal(t, domain.UrgencyHigh, got.Urgency)
+	require.Equal(t, domain.TypeBilling, got.Type)
+	require.Equal(t, domain.DeptBilling, got.Department)
+	require.InEpsilon(t, 0.91, got.Confidence, 0.001)
+	require.Equal(t, "qwen-max", got.Model)
+}
+
+func TestClassifyDerivesDepartmentWhenInvalid(t *testing.T) {
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(chatReply(`{"urgency":"normal","type":"technical","department":"nonsense","confidence":0.8}`)))
+	})
+	got, err := c.Classify(context.Background(), domain.Email{Subject: "bug", Body: "x"})
+	require.NoError(t, err)
+	require.Equal(t, domain.DeptEngineering, got.Department) // derived from type
+}
+
+func TestClassifyClampsConfidence(t *testing.T) {
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(chatReply(`{"urgency":"low","type":"general","department":"support_tier1","confidence":5}`)))
+	})
+	got, err := c.Classify(context.Background(), domain.Email{Subject: "hi", Body: "x"})
+	require.NoError(t, err)
+	require.Equal(t, 1.0, got.Confidence)
+}
+
+func TestClassifyStripsCodeFences(t *testing.T) {
+	fenced := "```json\n" + validClassificationJSON() + "\n```"
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(chatReply(fenced)))
+	})
+	got, err := c.Classify(context.Background(), domain.Email{Subject: "x", Body: "y"})
+	require.NoError(t, err)
+	require.Equal(t, domain.TypeBilling, got.Type)
+}
+
+func TestClassifyRepromptsOnMalformedThenSucceeds(t *testing.T) {
+	var calls int32
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		if atomic.AddInt32(&calls, 1) == 1 {
+			w.Write([]byte(chatReply("not json at all")))
+			return
+		}
+		w.Write([]byte(chatReply(validClassificationJSON())))
+	})
+	got, err := c.Classify(context.Background(), domain.Email{Subject: "x", Body: "y"})
+	require.NoError(t, err)
+	require.Equal(t, domain.TypeBilling, got.Type)
+	require.Equal(t, int32(2), atomic.LoadInt32(&calls)) // re-prompted once
+}
+
+func TestClassifyErrorsOnPersistentMalformed(t *testing.T) {
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(chatReply("still not json")))
+	})
+	_, err := c.Classify(context.Background(), domain.Email{Subject: "x", Body: "y"})
+	require.Error(t, err) // orchestrator will park this for human review
+}
+
+func TestClassifyErrorsOnInvalidEnumAfterReprompt(t *testing.T) {
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(chatReply(`{"urgency":"WAT","type":"billing","confidence":0.5}`)))
+	})
+	_, err := c.Classify(context.Background(), domain.Email{Subject: "x", Body: "y"})
+	require.Error(t, err)
 }

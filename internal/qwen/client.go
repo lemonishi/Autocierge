@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/lemonishi/supportsentinel/internal/domain"
@@ -150,9 +151,103 @@ func (c *Client) doChat(ctx context.Context, messages []chatMessage, jsonMode bo
 	return "", fmt.Errorf("dashscope request failed after %d attempts: %w", maxAttempts, lastErr)
 }
 
-// Classify is implemented in Task 3.
+const classifySystemPrompt = `You are a support-ticket classifier. Classify the customer's email and respond with ONLY a JSON object (no prose, no code fences) with exactly these fields:
+{"urgency": one of ["low","normal","high","critical"],
+ "type": one of ["billing","technical","account","feature_request","general"],
+ "department": one of ["billing","engineering","accounts","product","support_tier1"],
+ "confidence": a number between 0 and 1 (your confidence in the classification),
+ "reasoning": a one-sentence explanation}
+Use "critical" only for outages, data loss, or urgent business impact.`
+
+const reclassifyPrompt = `Your previous response was not valid JSON in the required schema. Respond again with ONLY the JSON object described, nothing else.`
+
+// Classify asks Qwen to classify the email and returns a validated Classification.
+// On malformed/invalid output it re-prompts once; if still bad it returns an error
+// (the orchestrator parks such tickets for human review — fail toward a human).
 func (c *Client) Classify(ctx context.Context, e domain.Email) (domain.Classification, error) {
-	return domain.Classification{}, errors.New("not implemented")
+	messages := []chatMessage{
+		{Role: "system", Content: classifySystemPrompt},
+		{Role: "user", Content: fmt.Sprintf("Subject: %s\n\nBody:\n%s", e.Subject, e.Body)},
+	}
+
+	content, err := c.doChat(ctx, messages, true)
+	if err != nil {
+		return domain.Classification{}, err
+	}
+	cl, perr := parseClassification(content)
+	if perr != nil {
+		// One re-prompt with the schema reminder.
+		messages = append(messages,
+			chatMessage{Role: "assistant", Content: content},
+			chatMessage{Role: "user", Content: reclassifyPrompt},
+		)
+		content, err = c.doChat(ctx, messages, true)
+		if err != nil {
+			return domain.Classification{}, err
+		}
+		cl, perr = parseClassification(content)
+		if perr != nil {
+			return domain.Classification{}, fmt.Errorf("invalid classification after re-prompt: %w", perr)
+		}
+	}
+	cl.Model = c.model
+	return cl, nil
+}
+
+// parseClassification parses and validates the model's JSON against the fixed
+// taxonomies. Invalid urgency/type is an error (triggers a re-prompt). An
+// invalid/empty department is derived from the type. Confidence is clamped to [0,1].
+func parseClassification(s string) (domain.Classification, error) {
+	var raw struct {
+		Urgency    string  `json:"urgency"`
+		Type       string  `json:"type"`
+		Department string  `json:"department"`
+		Confidence float64 `json:"confidence"`
+		Reasoning  string  `json:"reasoning"`
+	}
+	if err := json.Unmarshal([]byte(stripCodeFences(s)), &raw); err != nil {
+		return domain.Classification{}, fmt.Errorf("unmarshal classification: %w", err)
+	}
+
+	urg := domain.Urgency(strings.ToLower(strings.TrimSpace(raw.Urgency)))
+	if !domain.ValidUrgency(urg) {
+		return domain.Classification{}, fmt.Errorf("invalid urgency %q", raw.Urgency)
+	}
+	typ := domain.TicketType(strings.ToLower(strings.TrimSpace(raw.Type)))
+	if !domain.ValidType(typ) {
+		return domain.Classification{}, fmt.Errorf("invalid type %q", raw.Type)
+	}
+	dep := domain.Department(strings.ToLower(strings.TrimSpace(raw.Department)))
+	if !domain.ValidDepartment(dep) {
+		dep = domain.DepartmentForType(typ)
+	}
+	conf := raw.Confidence
+	if conf < 0 {
+		conf = 0
+	}
+	if conf > 1 {
+		conf = 1
+	}
+	return domain.Classification{
+		Urgency:    urg,
+		Type:       typ,
+		Department: dep,
+		Confidence: conf,
+		Reasoning:  raw.Reasoning,
+	}, nil
+}
+
+// stripCodeFences removes a leading ```json / ``` fence and trailing ``` if the
+// model wrapped its JSON despite being asked not to.
+func stripCodeFences(s string) string {
+	s = strings.TrimSpace(s)
+	if !strings.HasPrefix(s, "```") {
+		return s
+	}
+	s = strings.TrimPrefix(s, "```json")
+	s = strings.TrimPrefix(s, "```")
+	s = strings.TrimSuffix(strings.TrimSpace(s), "```")
+	return strings.TrimSpace(s)
 }
 
 // DraftReply is implemented in Task 4.
