@@ -217,3 +217,35 @@ func TestDraftReplyReturnsText(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, out, "refunded")
 }
+
+func toolCallReply(id, name, args string) string {
+	b, _ := json.Marshal(map[string]any{
+		"choices": []map[string]any{{"message": map[string]any{
+			"role":    "assistant",
+			"content": "",
+			"tool_calls": []map[string]any{{
+				"id": id, "type": "function",
+				"function": map[string]any{"name": name, "arguments": args},
+			}},
+		}}},
+	})
+	return string(b)
+}
+
+func TestDoChatRawSurfacesToolCalls(t *testing.T) {
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		var body chatRequest
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		require.Len(t, body.Tools, 1)
+		require.Equal(t, "lookup_customer", body.Tools[0].Function.Name)
+		w.Write([]byte(toolCallReply("call_1", "lookup_customer", `{"email":"x@y.com"}`)))
+	})
+	tools := []toolDef{{Type: "function", Function: functionDef{
+		Name: "lookup_customer", Description: "look up a customer", Parameters: map[string]any{"type": "object"},
+	}}}
+	msg, err := c.doChatRaw(context.Background(), []chatMessage{{Role: "user", Content: "hi"}}, false, tools)
+	require.NoError(t, err)
+	require.Len(t, msg.ToolCalls, 1)
+	require.Equal(t, "lookup_customer", msg.ToolCalls[0].Function.Name)
+	require.Equal(t, `{"email":"x@y.com"}`, msg.ToolCalls[0].Function.Arguments)
+}

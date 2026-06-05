@@ -30,6 +30,19 @@ const (
 	maxAttempts = 3
 )
 
+// ToolDefinition is a function-calling tool the model may invoke during Classify.
+type ToolDefinition struct {
+	Name        string
+	Description string
+	Parameters  map[string]any // JSON schema for the function arguments
+}
+
+// ToolBox supplies callable tools to the classifier.
+type ToolBox interface {
+	Definitions() []ToolDefinition
+	Invoke(ctx context.Context, name, argsJSON string) (string, error)
+}
+
 // Client is a Qwen classifier backed by Alibaba Cloud DashScope.
 type Client struct {
 	apiKey       string
@@ -37,6 +50,7 @@ type Client struct {
 	model        string
 	httpClient   *http.Client
 	retryBackoff time.Duration // initial backoff; doubles each retry
+	tools        ToolBox
 }
 
 var _ domain.Classifier = (*Client)(nil)
@@ -62,9 +76,50 @@ func New(apiKey, baseURL, model string, httpClient *http.Client) *Client {
 	}
 }
 
+// WithTools attaches a ToolBox so Classify can use function-calling. Returns the
+// same client for chaining.
+func (c *Client) WithTools(tb ToolBox) *Client {
+	c.tools = tb
+	return c
+}
+
+func toToolDefs(defs []ToolDefinition) []toolDef {
+	out := make([]toolDef, 0, len(defs))
+	for _, d := range defs {
+		out = append(out, toolDef{Type: "function", Function: functionDef{
+			Name: d.Name, Description: d.Description, Parameters: d.Parameters,
+		}})
+	}
+	return out
+}
+
+type toolCallFunction struct {
+	Name      string `json:"name"`
+	Arguments string `json:"arguments"`
+}
+
+type toolCall struct {
+	ID       string           `json:"id"`
+	Type     string           `json:"type"`
+	Function toolCallFunction `json:"function"`
+}
+
 type chatMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Role       string     `json:"role"`
+	Content    string     `json:"content"`
+	ToolCalls  []toolCall `json:"tool_calls,omitempty"`
+	ToolCallID string     `json:"tool_call_id,omitempty"`
+}
+
+type functionDef struct {
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Parameters  map[string]any `json:"parameters"`
+}
+
+type toolDef struct {
+	Type     string      `json:"type"` // "function"
+	Function functionDef `json:"function"`
 }
 
 type responseFormat struct {
@@ -74,6 +129,7 @@ type responseFormat struct {
 type chatRequest struct {
 	Model          string          `json:"model"`
 	Messages       []chatMessage   `json:"messages"`
+	Tools          []toolDef       `json:"tools,omitempty"`
 	ResponseFormat *responseFormat `json:"response_format,omitempty"`
 	Temperature    float64         `json:"temperature"`
 }
@@ -84,17 +140,20 @@ type chatResponse struct {
 	} `json:"choices"`
 }
 
-// doChat POSTs a chat-completion request and returns the first choice's content.
-// It retries on 429/5xx/network errors with exponential backoff (maxAttempts);
-// 4xx responses are returned immediately (non-retryable).
-func (c *Client) doChat(ctx context.Context, messages []chatMessage, jsonMode bool) (string, error) {
+// doChatRaw POSTs a chat-completion request and returns the first choice's
+// assistant message (content + any tool_calls). Retries on 429/5xx/network with
+// context-aware exponential backoff; 4xx is non-retryable.
+func (c *Client) doChatRaw(ctx context.Context, messages []chatMessage, jsonMode bool, tools []toolDef) (chatMessage, error) {
 	reqBody := chatRequest{Model: c.model, Messages: messages, Temperature: 0}
 	if jsonMode {
 		reqBody.ResponseFormat = &responseFormat{Type: "json_object"}
 	}
+	if len(tools) > 0 {
+		reqBody.Tools = tools
+	}
 	payload, err := json.Marshal(reqBody)
 	if err != nil {
-		return "", fmt.Errorf("marshal request: %w", err)
+		return chatMessage{}, fmt.Errorf("marshal request: %w", err)
 	}
 
 	backoff := c.retryBackoff
@@ -102,7 +161,7 @@ func (c *Client) doChat(ctx context.Context, messages []chatMessage, jsonMode bo
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/chat/completions", bytes.NewReader(payload))
 		if err != nil {
-			return "", fmt.Errorf("build dashscope request: %w", err)
+			return chatMessage{}, fmt.Errorf("build dashscope request: %w", err)
 		}
 		req.Header.Set("Authorization", "Bearer "+c.apiKey)
 		req.Header.Set("Content-Type", "application/json")
@@ -115,7 +174,7 @@ func (c *Client) doChat(ctx context.Context, messages []chatMessage, jsonMode bo
 				case <-time.After(backoff):
 					backoff *= 2
 				case <-ctx.Done():
-					return "", fmt.Errorf("dashscope request cancelled: %w", ctx.Err())
+					return chatMessage{}, fmt.Errorf("dashscope request cancelled: %w", ctx.Err())
 				}
 			}
 			continue
@@ -130,25 +189,34 @@ func (c *Client) doChat(ctx context.Context, messages []chatMessage, jsonMode bo
 				case <-time.After(backoff):
 					backoff *= 2
 				case <-ctx.Done():
-					return "", fmt.Errorf("dashscope request cancelled: %w", ctx.Err())
+					return chatMessage{}, fmt.Errorf("dashscope request cancelled: %w", ctx.Err())
 				}
 			}
 			continue
 		}
 		if resp.StatusCode != http.StatusOK {
-			return "", fmt.Errorf("dashscope status %d: %s", resp.StatusCode, string(body))
+			return chatMessage{}, fmt.Errorf("dashscope status %d: %s", resp.StatusCode, string(body))
 		}
 
 		var cr chatResponse
 		if err := json.Unmarshal(body, &cr); err != nil {
-			return "", fmt.Errorf("decode response: %w", err)
+			return chatMessage{}, fmt.Errorf("decode response: %w", err)
 		}
 		if len(cr.Choices) == 0 {
-			return "", errors.New("dashscope returned no choices")
+			return chatMessage{}, errors.New("dashscope returned no choices")
 		}
-		return cr.Choices[0].Message.Content, nil
+		return cr.Choices[0].Message, nil
 	}
-	return "", fmt.Errorf("dashscope request failed after %d attempts: %w", maxAttempts, lastErr)
+	return chatMessage{}, fmt.Errorf("dashscope request failed after %d attempts: %w", maxAttempts, lastErr)
+}
+
+// doChat returns just the assistant message content (no tools).
+func (c *Client) doChat(ctx context.Context, messages []chatMessage, jsonMode bool) (string, error) {
+	msg, err := c.doChatRaw(ctx, messages, jsonMode, nil)
+	if err != nil {
+		return "", err
+	}
+	return msg.Content, nil
 }
 
 const classifySystemPrompt = `You are a support-ticket classifier. Classify the customer's email and respond with ONLY a JSON object (no prose, no code fences) with exactly these fields:
