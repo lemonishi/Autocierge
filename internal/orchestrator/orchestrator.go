@@ -6,7 +6,10 @@ package orchestrator
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/lemonishi/supportsentinel/internal/alert"
@@ -108,6 +111,13 @@ func (o *Orchestrator) runDraft(ctx context.Context, ticketID uuid.UUID) error {
 	}); err != nil {
 		return err
 	}
+	return o.draftAndPark(ctx, ticketID)
+}
+
+// draftAndPark drafts a reply for a ticket already in DRAFTING and parks it for
+// human approval. On a draft error it logs and falls back to an empty draft so a
+// human writes the reply (fail toward a human).
+func (o *Orchestrator) draftAndPark(ctx context.Context, ticketID uuid.UUID) error {
 	tk, err := o.store.GetTicket(ctx, ticketID)
 	if err != nil {
 		return err
@@ -119,14 +129,14 @@ func (o *Orchestrator) runDraft(ctx context.Context, ticketID uuid.UUID) error {
 	draft, err := o.clf.DraftReply(ctx, tk, email)
 	if err != nil {
 		log.Printf("draft error for %s: %v", ticketID, err)
-		// Stay in DRAFTING is risky; park at reply approval with empty draft so a human writes one.
 		draft = ""
 	}
 	if _, err := o.store.SaveReplyDraft(ctx, ticketID, draft); err != nil {
 		return err
 	}
 	return o.store.Apply(ctx, store.Transition{
-		TicketID: ticketID, From: domain.StateDrafting, To: domain.StateAwaitingReplyApproval, Actor: "system",
+		TicketID: ticketID, From: domain.StateDrafting,
+		To: domain.StateAwaitingReplyApproval, Actor: "system",
 	})
 }
 
@@ -141,6 +151,15 @@ type ReviewDecision struct {
 // ReviewClassification (Checkpoint 1): a human confirms/overrides the routing,
 // after which the ticket routes and a reply is drafted.
 func (o *Orchestrator) ReviewClassification(ctx context.Context, ticketID uuid.UUID, d ReviewDecision, reviewer string) error {
+	if d.Urgency != "" && !domain.ValidUrgency(d.Urgency) {
+		return fmt.Errorf("invalid urgency: %q", d.Urgency)
+	}
+	if d.Type != "" && !domain.ValidType(d.Type) {
+		return fmt.Errorf("invalid type: %q", d.Type)
+	}
+	if d.Department != "" && !domain.ValidDepartment(d.Department) {
+		return fmt.Errorf("invalid department: %q", d.Department)
+	}
 	tr := store.Transition{
 		TicketID: ticketID, From: domain.StateAwaitingClassificationReview,
 		To: domain.StateRouted, Actor: "human:" + reviewer, Payload: d,
@@ -165,10 +184,17 @@ func (o *Orchestrator) ReviewClassification(ctx context.Context, ticketID uuid.U
 
 // ApproveReply (Checkpoint 2): human approves/edits the draft; ticket resolves.
 func (o *Orchestrator) ApproveReply(ctx context.Context, ticketID uuid.UUID, finalText, reviewer string) error {
+	if strings.TrimSpace(finalText) == "" {
+		return errors.New("final reply text must not be empty")
+	}
 	replyID, err := o.store.LatestReplyID(ctx, ticketID)
 	if err != nil {
 		return err
 	}
+	// NOTE: FinalizeReply and Apply are separate steps (consistent with the
+	// codebase's "save then Apply" pattern). A crash between them leaves a
+	// transient inconsistency; the planned orchestrator crash-recovery (re-scan of
+	// DRAFTING/CLASSIFYING on restart) is the intended holistic remedy.
 	if err := o.store.FinalizeReply(ctx, replyID, "approved", finalText); err != nil {
 		return err
 	}
@@ -185,6 +211,10 @@ func (o *Orchestrator) RejectReply(ctx context.Context, ticketID uuid.UUID, revi
 	if err != nil {
 		return err
 	}
+	// NOTE: FinalizeReply and Apply are separate steps (consistent with the
+	// codebase's "save then Apply" pattern). A crash between them leaves a
+	// transient inconsistency; the planned orchestrator crash-recovery (re-scan of
+	// DRAFTING/CLASSIFYING on restart) is the intended holistic remedy.
 	if err := o.store.FinalizeReply(ctx, replyID, "rejected", ""); err != nil {
 		return err
 	}
@@ -194,29 +224,6 @@ func (o *Orchestrator) RejectReply(ctx context.Context, ticketID uuid.UUID, revi
 	}); err != nil {
 		return err
 	}
-	// Re-draft from DRAFTING. runDraft expects ROUTED→DRAFTING, so issue the draft directly here.
-	return o.redraftFromDrafting(ctx, ticketID)
-}
-
-// redraftFromDrafting drafts a reply when already in DRAFTING and parks for approval.
-func (o *Orchestrator) redraftFromDrafting(ctx context.Context, ticketID uuid.UUID) error {
-	tk, err := o.store.GetTicket(ctx, ticketID)
-	if err != nil {
-		return err
-	}
-	email, err := o.store.GetEmailByTicket(ctx, ticketID)
-	if err != nil {
-		return err
-	}
-	draft, err := o.clf.DraftReply(ctx, tk, email)
-	if err != nil {
-		draft = ""
-	}
-	if _, err := o.store.SaveReplyDraft(ctx, ticketID, draft); err != nil {
-		return err
-	}
-	return o.store.Apply(ctx, store.Transition{
-		TicketID: ticketID, From: domain.StateDrafting,
-		To: domain.StateAwaitingReplyApproval, Actor: "system",
-	})
+	// Re-draft from DRAFTING. runDraft expects ROUTED→DRAFTING, so draft directly.
+	return o.draftAndPark(ctx, ticketID)
 }
