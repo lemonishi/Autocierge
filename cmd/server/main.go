@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/lemonishi/supportsentinel/internal/alert"
 	"github.com/lemonishi/supportsentinel/internal/classify"
@@ -27,10 +28,16 @@ func main() {
 
 	// Plan 1 uses the fake classifier; Plan 2 swaps in the Qwen client.
 	o := orchestrator.New(s, classify.NewFake(), alert.NewLog(), cfg.ConfidenceThreshold)
-	srv := httpapi.NewServer(o, s)
-
+	handler := httpapi.NewServer(o, s)
+	srv := &http.Server{
+		Addr:         ":" + cfg.Port,
+		Handler:      handler,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
 	log.Printf("SupportSentinel listening on :%s", cfg.Port)
-	if err := http.ListenAndServe(":"+cfg.Port, srv); err != nil {
+	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }
