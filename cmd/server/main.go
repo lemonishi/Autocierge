@@ -14,6 +14,7 @@ import (
 	"github.com/lemonishi/supportsentinel/internal/orchestrator"
 	"github.com/lemonishi/supportsentinel/internal/qwen"
 	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/supportsentinel/internal/tools"
 )
 
 func main() {
@@ -30,8 +31,12 @@ func main() {
 
 	var clf domain.Classifier
 	if cfg.DashScopeAPIKey != "" {
-		clf = qwen.New(cfg.DashScopeAPIKey, cfg.DashScopeBaseURL, cfg.QwenModel, nil)
-		log.Printf("classifier: Qwen via DashScope (model=%s)", cfg.QwenModel)
+		clf = qwen.New(cfg.DashScopeAPIKey, cfg.DashScopeBaseURL, cfg.QwenModel, nil).
+			WithTools(tools.New(s))
+		if err := s.SeedDemoCustomers(ctx); err != nil {
+			log.Printf("seed demo customers: %v", err)
+		}
+		log.Printf("classifier: Qwen via DashScope (model=%s) with tools", cfg.QwenModel)
 	} else {
 		clf = classify.NewFake()
 		log.Printf("classifier: fake (DASHSCOPE_API_KEY not set)")

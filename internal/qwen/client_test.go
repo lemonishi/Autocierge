@@ -217,3 +217,101 @@ func TestDraftReplyReturnsText(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, out, "refunded")
 }
+
+func toolCallReply(id, name, args string) string {
+	b, _ := json.Marshal(map[string]any{
+		"choices": []map[string]any{{"message": map[string]any{
+			"role":    "assistant",
+			"content": "",
+			"tool_calls": []map[string]any{{
+				"id": id, "type": "function",
+				"function": map[string]any{"name": name, "arguments": args},
+			}},
+		}}},
+	})
+	return string(b)
+}
+
+func TestDoChatRawSurfacesToolCalls(t *testing.T) {
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		var body chatRequest
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		require.Len(t, body.Tools, 1)
+		require.Equal(t, "lookup_customer", body.Tools[0].Function.Name)
+		w.Write([]byte(toolCallReply("call_1", "lookup_customer", `{"email":"x@y.com"}`)))
+	})
+	tools := []toolDef{{Type: "function", Function: functionDef{
+		Name: "lookup_customer", Description: "look up a customer", Parameters: map[string]any{"type": "object"},
+	}}}
+	msg, err := c.doChatRaw(context.Background(), []chatMessage{{Role: "user", Content: "hi"}}, false, tools)
+	require.NoError(t, err)
+	require.Len(t, msg.ToolCalls, 1)
+	require.Equal(t, "lookup_customer", msg.ToolCalls[0].Function.Name)
+	require.Equal(t, `{"email":"x@y.com"}`, msg.ToolCalls[0].Function.Arguments)
+}
+
+// fakeToolBox returns canned customer data and records what was invoked.
+type fakeToolBox struct{ invoked []string }
+
+func (f *fakeToolBox) Definitions() []ToolDefinition {
+	return []ToolDefinition{{
+		Name:        "lookup_customer",
+		Description: "Look up a customer by email",
+		Parameters: map[string]any{
+			"type":       "object",
+			"properties": map[string]any{"email": map[string]any{"type": "string"}},
+			"required":   []string{"email"},
+		},
+	}}
+}
+
+func (f *fakeToolBox) Invoke(_ context.Context, name, args string) (string, error) {
+	f.invoked = append(f.invoked, name)
+	return `{"tier":"enterprise","account_status":"active"}`, nil
+}
+
+func TestClassifyRunsToolCallThenClassifies(t *testing.T) {
+	var calls int32
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		n := atomic.AddInt32(&calls, 1)
+		if n == 1 {
+			// First turn: model asks to call the tool.
+			w.Write([]byte(toolCallReply("call_1", "lookup_customer", `{"email":"vip@acme.com"}`)))
+			return
+		}
+		// Second turn: model returns the final classification, having "seen" the tool result.
+		w.Write([]byte(chatReply(validClassificationJSON())))
+	})
+	tb := &fakeToolBox{}
+	c.WithTools(tb)
+
+	got, err := c.Classify(context.Background(), domain.Email{Subject: "charged twice", Body: "vip@acme.com double charge"})
+	require.NoError(t, err)
+	require.Equal(t, domain.TypeBilling, got.Type)
+	require.Equal(t, int32(2), atomic.LoadInt32(&calls))
+	require.Equal(t, []string{"lookup_customer"}, tb.invoked)
+	require.Contains(t, got.ToolsUsed, "lookup_customer")
+}
+
+func TestClassifySendsToolResultBackToModel(t *testing.T) {
+	var secondRoles []string
+	var calls int32
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		n := atomic.AddInt32(&calls, 1)
+		if n == 2 {
+			var body chatRequest
+			_ = json.NewDecoder(r.Body).Decode(&body)
+			for _, m := range body.Messages {
+				secondRoles = append(secondRoles, m.Role)
+			}
+			w.Write([]byte(chatReply(validClassificationJSON())))
+			return
+		}
+		w.Write([]byte(toolCallReply("call_1", "lookup_customer", `{"email":"v@a.com"}`)))
+	})
+	c.WithTools(&fakeToolBox{})
+	_, err := c.Classify(context.Background(), domain.Email{Subject: "x", Body: "y"})
+	require.NoError(t, err)
+	// The second request must include the assistant tool-call turn and the tool result.
+	require.Equal(t, []string{"system", "user", "assistant", "tool"}, secondRoles)
+}
