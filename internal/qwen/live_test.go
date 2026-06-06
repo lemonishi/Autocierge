@@ -78,8 +78,9 @@ func TestLiveClassifyWithTools(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
 	got, err := c.Classify(ctx, domain.Email{
-		Subject: "billing problem from vip@acme.com",
-		Body:    "I think I was overcharged on my enterprise plan. Please check my account vip@acme.com.",
+		FromAddr: "vip@acme.com",
+		Subject:  "billing problem",
+		Body:     "I think I was overcharged on my enterprise plan. Please check my account.",
 	})
 	require.NoError(t, err)
 	require.True(t, domain.ValidType(got.Type))

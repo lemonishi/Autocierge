@@ -230,6 +230,13 @@ Use "critical" only for outages, data loss, or urgent business impact.`
 
 const reclassifyPrompt = `Your previous response was not valid JSON in the required schema. Respond again with ONLY the JSON object described, nothing else.`
 
+// toolUsageGuidance is appended to the system prompt when tools are attached, so
+// the model actually exercises function-calling to disambiguate.
+const toolUsageGuidance = `You have tools available. Before producing your final JSON classification:
+- Call lookup_customer with the sender's email address to check their account tier and status. A higher tier (e.g. enterprise) or a "past_due" status should raise the urgency.
+- Call lookup_similar_tickets with a short keyword from the email to see how comparable past tickets were classified, and stay consistent with them.
+Use the tools first, then return ONLY the final JSON object.`
+
 // Classify asks Qwen to classify the email. When a ToolBox is attached it runs a
 // function-calling loop: it offers the tools, executes any tool_calls the model
 // requests (recording them in ToolsUsed), and finishes when the model returns the
@@ -237,13 +244,15 @@ const reclassifyPrompt = `Your previous response was not valid JSON in the requi
 // malformed/invalid output it re-prompts once; persistent failure returns an
 // error so the orchestrator parks the ticket for human review (fail toward a human).
 func (c *Client) Classify(ctx context.Context, e domain.Email) (domain.Classification, error) {
-	messages := []chatMessage{
-		{Role: "system", Content: classifySystemPrompt},
-		{Role: "user", Content: fmt.Sprintf("Subject: %s\n\nBody:\n%s", e.Subject, e.Body)},
-	}
+	systemPrompt := classifySystemPrompt
 	var tools []toolDef
 	if c.tools != nil {
 		tools = toToolDefs(c.tools.Definitions())
+		systemPrompt = classifySystemPrompt + "\n\n" + toolUsageGuidance
+	}
+	messages := []chatMessage{
+		{Role: "system", Content: systemPrompt},
+		{Role: "user", Content: fmt.Sprintf("From: %s\nSubject: %s\n\nBody:\n%s", e.FromAddr, e.Subject, e.Body)},
 	}
 	// JSON-mode only when no tools are offered (response_format + tools can conflict;
 	// with tools we rely on the prompt + validation + re-prompt instead).
