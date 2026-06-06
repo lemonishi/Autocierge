@@ -11,6 +11,10 @@ Plans: `docs/superpowers/plans/`.
   JSON-mode classification with validation + one re-prompt, free-text drafts,
   bounded retry. `cmd/server` uses it when `DASHSCOPE_API_KEY` is set, else the
   fake classifier. Live smoke test: `go test -tags live ./internal/qwen/`.
+- Tool layer: `internal/tools` (DashScope function-calling) — `lookup_customer` and
+  `lookup_similar_tickets`, store-backed, attached via `qwen.Client.WithTools`. The
+  classifier invokes them during Classify; invocations are recorded in
+  `classifications.tools_used`. Demo customers seeded at server startup.
 - DB: PostgreSQL (local for dev/test; Alibaba Cloud RDS in prod).
 - Frontend: React, built and embedded via `//go:embed` (Plan 4).
 - Deploy: NO Docker. Single Go binary + systemd + nginx on Alibaba Cloud ECS (Plan 7).

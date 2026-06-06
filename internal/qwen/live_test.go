@@ -50,3 +50,39 @@ func TestLiveDraftReply(t *testing.T) {
 	require.NotEmpty(t, out)
 	t.Logf("live draft: %s", out)
 }
+
+// stubToolBox is a live-test ToolBox returning canned data, to exercise the
+// real model's function-calling without a DB.
+type stubToolBox struct{ called []string }
+
+func (s *stubToolBox) Definitions() []ToolDefinition {
+	return []ToolDefinition{{
+		Name:        "lookup_customer",
+		Description: "Look up a customer's tier and status by email.",
+		Parameters: map[string]any{
+			"type":       "object",
+			"properties": map[string]any{"email": map[string]any{"type": "string"}},
+			"required":   []string{"email"},
+		},
+	}}
+}
+func (s *stubToolBox) Invoke(_ context.Context, name, args string) (string, error) {
+	s.called = append(s.called, name)
+	return `{"found":true,"tier":"enterprise","account_status":"active"}`, nil
+}
+
+func TestLiveClassifyWithTools(t *testing.T) {
+	c := liveClient(t)
+	tb := &stubToolBox{}
+	c.WithTools(tb)
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+	got, err := c.Classify(ctx, domain.Email{
+		Subject: "billing problem from vip@acme.com",
+		Body:    "I think I was overcharged on my enterprise plan. Please check my account vip@acme.com.",
+	})
+	require.NoError(t, err)
+	require.True(t, domain.ValidType(got.Type))
+	t.Logf("live tools classification: type=%s urgency=%s tools_used=%v called=%v",
+		got.Type, got.Urgency, got.ToolsUsed, tb.called)
+}
