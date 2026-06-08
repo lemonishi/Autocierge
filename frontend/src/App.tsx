@@ -49,6 +49,7 @@ export default function App() {
         <main className="min-w-0 flex-1 overflow-y-auto p-6">
           {detail ? (
             <TicketDetail
+              key={detail.ticket.id}
               detail={detail}
               audit={audit}
               onReviewClassification={async (d) => {
