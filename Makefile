@@ -1,4 +1,4 @@
-.PHONY: dev test test-db build tidy
+.PHONY: dev test test-db build tidy frontend
 
 # Auto-load app.env (gitignored) so DATABASE_URL / TEST_DATABASE_URL are set
 # without manual exporting. Override per-invocation by setting the var inline.
@@ -13,7 +13,11 @@ tidy:
 dev:
 	go run ./cmd/server
 
-build:
+frontend:
+	cd frontend && npm install && npm run build
+	touch internal/webui/dist/.gitkeep
+
+build: frontend
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/server ./cmd/server
 
 # Unit tests + DB-backed tests (DB tests run when TEST_DATABASE_URL is set,

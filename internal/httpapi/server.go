@@ -11,6 +11,7 @@ import (
 	"github.com/lemonishi/supportsentinel/internal/domain"
 	"github.com/lemonishi/supportsentinel/internal/orchestrator"
 	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/supportsentinel/internal/webui"
 )
 
 func NewServer(o *orchestrator.Orchestrator, s *store.Store) http.Handler {
@@ -23,6 +24,7 @@ func NewServer(o *orchestrator.Orchestrator, s *store.Store) http.Handler {
 	mux.HandleFunc("GET /api/tickets", h.listTickets)
 	mux.HandleFunc("GET /api/tickets/{id}/detail", h.ticketDetail)
 	mux.HandleFunc("GET /api/tickets/{id}/audit", h.ticketAudit)
+	mux.Handle("/", webui.Handler())
 	return mux
 }
 
