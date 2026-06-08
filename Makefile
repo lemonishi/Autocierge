@@ -1,4 +1,4 @@
-.PHONY: dev test test-db build tidy
+.PHONY: dev run test test-db build tidy frontend
 
 # Auto-load app.env (gitignored) so DATABASE_URL / TEST_DATABASE_URL are set
 # without manual exporting. Override per-invocation by setting the var inline.
@@ -10,10 +10,23 @@ endif
 tidy:
 	go mod tidy
 
+# Run the server locally (native, app.env auto-loaded). Does NOT build the
+# frontend first — use `make run` for the full dashboard.
 dev:
 	go run ./cmd/server
 
-build:
+# Build the dashboard, then run the server locally with the embedded UI.
+# This is the one-command "see the dashboard at http://localhost:8080".
+run: frontend
+	go run ./cmd/server
+
+frontend:
+	cd frontend && npm install && npm run build
+	touch internal/webui/dist/.gitkeep
+
+# Cross-compiles a linux/amd64 binary for Alibaba Cloud ECS deploy (NOT runnable
+# on macOS). For local use, run `make run` instead.
+build: frontend
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/server ./cmd/server
 
 # Unit tests + DB-backed tests (DB tests run when TEST_DATABASE_URL is set,

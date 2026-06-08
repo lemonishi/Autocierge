@@ -16,7 +16,12 @@ Plans: `docs/superpowers/plans/`.
   classifier invokes them during Classify; invocations are recorded in
   `classifications.tools_used`. Demo customers seeded at server startup.
 - DB: PostgreSQL (local for dev/test; Alibaba Cloud RDS in prod).
-- Frontend: React, built and embedded via `//go:embed` (Plan 4).
+- Dashboard: `frontend/` (Vite + React + TS + Tailwind v4), two-pane reviewer console
+  (queue + detail with reasoning/confidence/tools-used + both checkpoint controls +
+  audit timeline). Built into `internal/webui/dist` and embedded via `//go:embed`;
+  served at `/` by the Go binary (`internal/webui`). Read endpoints: `GET /api/tickets`,
+  `/api/tickets/{id}/detail`, `/api/tickets/{id}/audit`. Dev: `cd frontend && npm run dev`
+  (proxies /api → :8080). Build: `make frontend` then `go build`.
 - Deploy: NO Docker. Single Go binary + systemd + nginx on Alibaba Cloud ECS (Plan 7).
 
 ## Fixed taxonomies (hard contract — see internal/domain)
