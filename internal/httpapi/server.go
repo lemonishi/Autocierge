@@ -20,6 +20,9 @@ func NewServer(o *orchestrator.Orchestrator, s *store.Store) http.Handler {
 	mux.HandleFunc("GET /api/tickets/{id}", h.getTicket)
 	mux.HandleFunc("POST /api/tickets/{id}/classification-review", h.reviewClassification)
 	mux.HandleFunc("POST /api/tickets/{id}/reply-approval", h.replyApproval)
+	mux.HandleFunc("GET /api/tickets", h.listTickets)
+	mux.HandleFunc("GET /api/tickets/{id}/detail", h.ticketDetail)
+	mux.HandleFunc("GET /api/tickets/{id}/audit", h.ticketAudit)
 	return mux
 }
 
