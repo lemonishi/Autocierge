@@ -16,7 +16,7 @@ Plans: `docs/superpowers/plans/`.
   classifier invokes them during Classify; invocations are recorded in
   `classifications.tools_used`. Demo customers seeded at server startup.
 - Ingestion: two sources feed the same idempotent `orchestrator.Ingest` (dedupe on
-  Message-ID). (1) HTTP `POST /api/ingest` (`internal/httpapi`). (2) IMAP poller
+  Message-ID). (1) HTTP `POST /api/emails` (`internal/httpapi`). (2) IMAP poller
   (`internal/ingest/imap`) — a background goroutine watching a mailbox, started by
   `cmd/server` only when `IMAPEnabled()` (i.e. `IMAP_HOST` set); polls UNSEEN, parses
   via `ingest.ParseRFC822`, ingests source `"imap"`, marks `\Seen`. Best-effort per
