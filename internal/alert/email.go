@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/smtp"
+	"time"
 
 	"github.com/lemonishi/supportsentinel/internal/domain"
 )
@@ -39,8 +40,8 @@ func (e *Email) Alert(_ context.Context, t domain.Ticket) error {
 	subject := fmt.Sprintf("[URGENT] support ticket %s (%s)", t.ID, t.Urgency)
 	body := fmt.Sprintf("Urgent ticket needs review.\r\nID: %s\r\nUrgency: %s\r\nType: %s\r\nReview: %s/tickets/%s\r\n",
 		t.ID, t.Urgency, t.Type, e.baseAppURL, t.ID)
-	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s",
-		e.from, e.to, subject, body))
+	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nDate: %s\r\nSubject: %s\r\n\r\n%s",
+		e.from, e.to, time.Now().UTC().Format(time.RFC1123Z), subject, body))
 	auth := smtp.PlainAuth("", e.username, e.password, e.host)
 	return e.send(e.host+":"+e.port, auth, e.from, []string{e.to}, msg)
 }

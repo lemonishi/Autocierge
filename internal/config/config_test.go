@@ -157,3 +157,30 @@ func TestSMTPSlackRoundTrip(t *testing.T) {
 		t.Errorf("SlackWebhookURL = %q", c.SlackWebhookURL)
 	}
 }
+
+func TestSMTPToRoundTrip(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("SMTP_FROM", "support@example.com")
+	t.Setenv("SMTP_TO", "ops@example.com")
+
+	c, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if c.SMTPTo != "ops@example.com" {
+		t.Errorf("SMTPTo = %q, want ops@example.com", c.SMTPTo)
+	}
+}
+
+func TestSMTPToDefaultsEmpty(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("SMTP_TO", "")
+
+	c, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if c.SMTPTo != "" {
+		t.Errorf("SMTPTo = %q, want empty when SMTP_TO unset", c.SMTPTo)
+	}
+}

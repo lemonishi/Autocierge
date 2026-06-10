@@ -29,6 +29,7 @@ type Config struct {
 	SMTPUsername    string
 	SMTPPassword    string
 	SMTPFrom        string
+	SMTPTo          string // escalation/ops address; defaults to SMTPFrom if unset
 	SlackWebhookURL string
 }
 
@@ -74,6 +75,7 @@ func Load() (Config, error) {
 	c.SMTPUsername = os.Getenv("SMTP_USERNAME")
 	c.SMTPPassword = os.Getenv("SMTP_PASSWORD")
 	c.SMTPFrom = os.Getenv("SMTP_FROM")
+	c.SMTPTo = os.Getenv("SMTP_TO")
 	c.SlackWebhookURL = os.Getenv("SLACK_WEBHOOK_URL")
 
 	return c, nil
