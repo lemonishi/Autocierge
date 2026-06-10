@@ -15,6 +15,16 @@ Plans: `docs/superpowers/plans/`.
   `lookup_similar_tickets`, store-backed, attached via `qwen.Client.WithTools`. The
   classifier invokes them during Classify; invocations are recorded in
   `classifications.tools_used`. Demo customers seeded at server startup.
+- Ingestion: two sources feed the same idempotent `orchestrator.Ingest` (dedupe on
+  Message-ID). (1) HTTP `POST /api/ingest` (`internal/httpapi`). (2) IMAP poller
+  (`internal/ingest/imap`) — a background goroutine watching a mailbox, started by
+  `cmd/server` only when `IMAPEnabled()` (i.e. `IMAP_HOST` set); polls UNSEEN, parses
+  via `ingest.ParseRFC822`, ingests source `"imap"`, marks `\Seen`. Best-effort per
+  message; off by default. (Live IMAP validation is a manual step — point `IMAP_*`
+  at a real inbox.) Uses `github.com/emersion/go-imap/v2` (beta).
+- Alerting: `internal/alert` — best-effort `Multi` fan-out (`alert.FromConfig`) of Log +
+  Slack webhook + SMTP email, activated by `SLACK_WEBHOOK_URL` / `SMTP_*` config.
+  Failures are logged and never block the pipeline.
 - DB: PostgreSQL (local for dev/test; Alibaba Cloud RDS in prod).
 - Dashboard: `frontend/` (Vite + React + TS + Tailwind v4), two-pane reviewer console
   (queue + detail with reasoning/confidence/tools-used + both checkpoint controls +

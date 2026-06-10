@@ -11,6 +11,7 @@ import (
 	"github.com/lemonishi/supportsentinel/internal/config"
 	"github.com/lemonishi/supportsentinel/internal/domain"
 	"github.com/lemonishi/supportsentinel/internal/httpapi"
+	"github.com/lemonishi/supportsentinel/internal/ingest/imap"
 	"github.com/lemonishi/supportsentinel/internal/orchestrator"
 	"github.com/lemonishi/supportsentinel/internal/qwen"
 	"github.com/lemonishi/supportsentinel/internal/store"
@@ -42,6 +43,13 @@ func main() {
 		log.Printf("classifier: fake (DASHSCOPE_API_KEY not set)")
 	}
 	o := orchestrator.New(s, clf, alert.FromConfig(cfg), cfg.ConfidenceThreshold)
+
+	if cfg.IMAPEnabled() {
+		poller := imap.New(cfg, o)
+		go poller.Run(ctx)
+		log.Printf("imap poller watching %s/%s every %ds", cfg.IMAPHost, cfg.IMAPMailbox, cfg.IMAPPollSeconds)
+	}
+
 	handler := httpapi.NewServer(o, s)
 	srv := &http.Server{
 		Addr:         ":" + cfg.Port,
