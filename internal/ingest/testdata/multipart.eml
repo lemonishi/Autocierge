@@ -1,0 +1,30 @@
+From: Bob Jones <bob@example.com>
+To: support@company.com
+Subject: Billing charge is incorrect
+Message-ID: <unique-002@mail.example.com>
+Date: Mon, 10 Jun 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="boundary-abc123"
+
+--boundary-abc123
+Content-Type: text/plain; charset=utf-8
+
+Hi,
+
+I was charged twice for my subscription this month. Please refund the
+duplicate charge of $49.99.
+
+Thank you,
+Bob
+
+--boundary-abc123
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>Hi,</p>
+<p>I was charged twice for my subscription this month. Please refund the
+duplicate charge of $49.99.</p>
+<p>Thank you,<br>Bob</p>
+</body></html>
+
+--boundary-abc123--
