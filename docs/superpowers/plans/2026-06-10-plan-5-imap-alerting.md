@@ -1,6 +1,6 @@
 # SupportSentinel — Plan 5: IMAP Ingestion + Slack/Email Alerting
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax. Read `HANDOVER.md` first if you're new to the repo.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax.
 
 **Goal:** Add a real **inbound-email source** — an IMAP poller that watches a mailbox and feeds the same `orchestrator.Ingest` path (idempotent via RFC822 Message-ID) — and real **urgent alerting** (Slack webhook + SMTP email) replacing the log-only alerter, still best-effort. This is the "production-real, not a toy" proof for Track 4.
 
@@ -8,7 +8,7 @@
 
 **Tech Stack:** Go 1.25; `github.com/emersion/go-imap/v2` (+ `go-message` for MIME parsing) for IMAP; stdlib `net/smtp` + `net/http` for alerts. Tests: pure parsing via `.eml` fixtures; Slack via `httptest`; Email via an injected send func; IMAP poller validated manually against a real test inbox.
 
-**Spec:** `docs/superpowers/specs/2026-06-05-supportsentinel-design.md` (§3 ingestion adapters + alerting, §7 best-effort alerts). **Builds on:** Plans 1–4 (`orchestrator.Ingest`, `alert.Alerter`, `domain.Email.DedupeKey`). **Module path:** `github.com/lemonishi/supportsentinel`. **Env:** Postgres on 5433 (`TEST_DATABASE_URL`). Commit as `Lennon <lemoncode8888@gmail.com>` (see HANDOVER.md).
+**Spec:** `docs/superpowers/specs/2026-06-05-supportsentinel-design.md` (§3 ingestion adapters + alerting, §7 best-effort alerts). **Builds on:** Plans 1–4 (`orchestrator.Ingest`, `alert.Alerter`, `domain.Email.DedupeKey`). **Module path:** `github.com/lemonishi/supportsentinel`. **Env:** Postgres on 5433 (`TEST_DATABASE_URL`). Commit with the repo's existing git config; do not override the author email.
 
 ---
 
