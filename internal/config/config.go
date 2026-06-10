@@ -64,7 +64,8 @@ func Load() (Config, error) {
 	c.IMAPMailbox = getenv("IMAP_MAILBOX", "INBOX")
 	c.IMAPPollSeconds = 30
 	if v := os.Getenv("IMAP_POLL_SECONDS"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil {
+		// Only accept a positive interval; 0/negative would panic time.NewTicker.
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
 			c.IMAPPollSeconds = n
 		}
 	}

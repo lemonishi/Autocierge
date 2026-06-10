@@ -184,3 +184,17 @@ func TestSMTPToDefaultsEmpty(t *testing.T) {
 		t.Errorf("SMTPTo = %q, want empty when SMTP_TO unset", c.SMTPTo)
 	}
 }
+
+func TestIMAPPollSecondsRejectsNonPositive(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	for _, v := range []string{"0", "-5", "notanumber"} {
+		t.Setenv("IMAP_POLL_SECONDS", v)
+		c, err := Load()
+		if err != nil {
+			t.Fatalf("Load: %v", err)
+		}
+		if c.IMAPPollSeconds != 30 {
+			t.Errorf("IMAP_POLL_SECONDS=%q → IMAPPollSeconds=%d, want 30 (default)", v, c.IMAPPollSeconds)
+		}
+	}
+}
