@@ -73,3 +73,87 @@ func TestLoadDashScopeOverrides(t *testing.T) {
 		t.Fatalf("QwenModel override = %q", c.QwenModel)
 	}
 }
+
+func TestIMAPSMTPSlackDefaults(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	// Ensure all IMAP/SMTP/Slack vars are unset.
+	for _, k := range []string{
+		"IMAP_HOST", "IMAP_PORT", "IMAP_USERNAME", "IMAP_PASSWORD", "IMAP_MAILBOX",
+		"IMAP_POLL_SECONDS",
+		"SMTP_HOST", "SMTP_PORT", "SMTP_USERNAME", "SMTP_PASSWORD", "SMTP_FROM",
+		"SLACK_WEBHOOK_URL",
+	} {
+		t.Setenv(k, "")
+	}
+
+	c, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+
+	// IMAP defaults
+	if c.IMAPPort != "993" {
+		t.Errorf("IMAPPort = %q, want 993", c.IMAPPort)
+	}
+	if c.IMAPMailbox != "INBOX" {
+		t.Errorf("IMAPMailbox = %q, want INBOX", c.IMAPMailbox)
+	}
+	if c.IMAPPollSeconds != 30 {
+		t.Errorf("IMAPPollSeconds = %d, want 30", c.IMAPPollSeconds)
+	}
+	// IMAPEnabled false when host is empty
+	if c.IMAPEnabled() {
+		t.Error("IMAPEnabled() = true, want false when IMAPHost is empty")
+	}
+
+	// SMTP defaults
+	if c.SMTPPort != "587" {
+		t.Errorf("SMTPPort = %q, want 587", c.SMTPPort)
+	}
+}
+
+func TestIMAPEnabled(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("IMAP_HOST", "imap.example.com")
+
+	c, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if !c.IMAPEnabled() {
+		t.Error("IMAPEnabled() = false, want true when IMAPHost is set")
+	}
+}
+
+func TestSMTPSlackRoundTrip(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("SMTP_HOST", "smtp.example.com")
+	t.Setenv("SMTP_PORT", "465")
+	t.Setenv("SMTP_USERNAME", "user@example.com")
+	t.Setenv("SMTP_PASSWORD", "s3cret")
+	t.Setenv("SMTP_FROM", "support@example.com")
+	t.Setenv("SLACK_WEBHOOK_URL", "https://hooks.slack.com/T123/abc")
+
+	c, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if c.SMTPHost != "smtp.example.com" {
+		t.Errorf("SMTPHost = %q", c.SMTPHost)
+	}
+	if c.SMTPPort != "465" {
+		t.Errorf("SMTPPort = %q", c.SMTPPort)
+	}
+	if c.SMTPUsername != "user@example.com" {
+		t.Errorf("SMTPUsername = %q", c.SMTPUsername)
+	}
+	if c.SMTPPassword != "s3cret" {
+		t.Errorf("SMTPPassword = %q", c.SMTPPassword)
+	}
+	if c.SMTPFrom != "support@example.com" {
+		t.Errorf("SMTPFrom = %q", c.SMTPFrom)
+	}
+	if c.SlackWebhookURL != "https://hooks.slack.com/T123/abc" {
+		t.Errorf("SlackWebhookURL = %q", c.SlackWebhookURL)
+	}
+}
