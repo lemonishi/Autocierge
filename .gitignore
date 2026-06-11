@@ -14,3 +14,6 @@ frontend/dist/
 frontend/*.tsbuildinfo
 frontend/*.js
 frontend/*.d.ts
+
+# VS Code Postgres extension scratch query file (local DB session)
+postgres.session.sql
