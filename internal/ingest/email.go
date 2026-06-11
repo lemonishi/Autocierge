@@ -6,8 +6,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"html"
 	"io"
+	"mime"
 	"net/mail"
+	"regexp"
 	"strings"
 
 	gomessagemail "github.com/emersion/go-message/mail"
@@ -38,7 +41,7 @@ func ParseRFC822(raw []byte) (domain.Email, error) {
 		return domain.Email{}, fmt.Errorf("ingest: parse From address %q: %w", fromHeader, err)
 	}
 
-	subject := msg.Header.Get("Subject")
+	subject := decodeHeader(msg.Header.Get("Subject"))
 	rawMsgID := strings.TrimSpace(msg.Header.Get("Message-Id"))
 
 	// Extract the body: walk MIME parts looking for text/plain.
@@ -85,6 +88,58 @@ func parseAddress(v string) (string, error) {
 		return v, nil
 	}
 	return addr.Address, nil
+}
+
+// headerDecoder decodes RFC 2047 "encoded-word" header values (e.g.
+// "=?UTF-8?q?Caf=C3=A9?=") into plain UTF-8. The default CharsetReader handles
+// UTF-8, US-ASCII, and ISO-8859-1; other charsets fall back to the raw value.
+var headerDecoder = &mime.WordDecoder{}
+
+// decodeHeader returns v with any RFC 2047 encoded-words decoded. If decoding
+// fails (e.g. an unsupported charset) the original trimmed value is returned so
+// the ticket still carries a best-effort subject rather than an error.
+func decodeHeader(v string) string {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return ""
+	}
+	decoded, err := headerDecoder.DecodeHeader(v)
+	if err != nil {
+		return v
+	}
+	return decoded
+}
+
+var (
+	// scriptStyleRe drops <script>/<style> blocks including their contents.
+	scriptStyleRe = regexp.MustCompile(`(?is)<(script|style)\b[^>]*>.*?</(script|style)>`)
+	// blockBreakRe maps block-level breaks to newlines so the text stays readable.
+	blockBreakRe = regexp.MustCompile(`(?i)<br\s*/?>|</(p|div|tr|li|h[1-6]|table)>`)
+	// tagRe strips any remaining HTML tags.
+	tagRe = regexp.MustCompile(`(?s)<[^>]*>`)
+	// inlineSpaceRe collapses runs of spaces/tabs/non-breaking spaces.
+	inlineSpaceRe = regexp.MustCompile("[ \t ]+")
+)
+
+// htmlToText reduces an HTML body to readable plain text: it drops
+// script/style blocks, converts block breaks to newlines, strips remaining
+// tags, decodes HTML entities, and collapses redundant whitespace. This keeps
+// the classifier and reviewers from seeing raw markup for HTML-only emails.
+func htmlToText(s string) string {
+	s = scriptStyleRe.ReplaceAllString(s, " ")
+	s = blockBreakRe.ReplaceAllString(s, "\n")
+	s = tagRe.ReplaceAllString(s, "")
+	s = html.UnescapeString(s)
+
+	lines := strings.Split(s, "\n")
+	out := make([]string, 0, len(lines))
+	for _, ln := range lines {
+		ln = strings.TrimSpace(inlineSpaceRe.ReplaceAllString(ln, " "))
+		if ln != "" {
+			out = append(out, ln)
+		}
+	}
+	return strings.Join(out, "\n")
 }
 
 // extractBody walks the MIME structure of raw and returns the text/plain part.
@@ -143,7 +198,7 @@ func extractBody(raw []byte) (string, error) {
 		return plainText, nil
 	}
 	if htmlText != "" {
-		return htmlText, nil
+		return htmlToText(htmlText), nil
 	}
 	// Nothing usable from MIME walk — fall back to raw body.
 	return bodyFallback(raw), nil

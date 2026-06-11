@@ -46,6 +46,42 @@ func TestParseRFC822_Multipart(t *testing.T) {
 	assert.NotEmpty(t, email.Raw["message-id"])
 }
 
+func TestParseRFC822_EncodedSubject(t *testing.T) {
+	raw := readFixture(t, "encodedsubject.eml")
+	email, err := ingest.ParseRFC822(raw)
+	require.NoError(t, err)
+
+	// RFC 2047 encoded-word subject must be decoded to UTF-8 text.
+	assert.Equal(t, "Welcome to Claude — let’s get started", email.Subject)
+	// From display name is encoded too, but we keep only the address.
+	assert.Equal(t, "team@anthropic.com", email.FromAddr)
+	// Quoted-printable body is decoded (em-dash, not "=E2=80=94").
+	assert.Contains(t, email.Body, "signing up — here is how")
+	assert.NotContains(t, email.Body, "=E2=80=94")
+}
+
+func TestParseRFC822_HTMLOnly(t *testing.T) {
+	raw := readFixture(t, "htmlonly.eml")
+	email, err := ingest.ParseRFC822(raw)
+	require.NoError(t, err)
+
+	assert.Equal(t, "dana@example.com", email.FromAddr)
+	assert.Equal(t, "Service is down", email.Subject)
+
+	// HTML-only body must be reduced to readable text:
+	// tags stripped, entities decoded, script/style content dropped.
+	assert.Contains(t, email.Body, "completely down")
+	assert.Contains(t, email.Body, "customers are affected")
+	assert.Contains(t, email.Body, "this is urgent")
+	assert.NotContains(t, email.Body, "<p>")
+	assert.NotContains(t, email.Body, "<strong>")
+	assert.NotContains(t, email.Body, "var tracking")    // <script> content dropped
+	assert.NotContains(t, email.Body, "color: red")      // <style> content dropped
+	assert.Contains(t, email.Body, "&")                  // &amp; decoded to literal &
+	assert.NotContains(t, email.Body, "&amp;")
+	assert.NotContains(t, email.Body, "&nbsp;")
+}
+
 func TestParseRFC822_NoMsgID(t *testing.T) {
 	raw := readFixture(t, "nomsgid.eml")
 	email, err := ingest.ParseRFC822(raw)
