@@ -1,0 +1,17 @@
+From: Dana Lee <dana@example.com>
+To: support@company.com
+Subject: Service is down
+Message-ID: <unique-005@mail.example.com>
+Date: Wed, 11 Jun 2026 15:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html>
+<head><style>.x { color: red; }</style></head>
+<body>
+<p>Hi&nbsp;team,</p>
+<p>Our dashboard is <strong>completely down</strong> &amp; customers are affected.</p>
+<script>var tracking = 1;</script>
+<p>Please help&mdash;this is urgent.</p>
+</body>
+</html>
