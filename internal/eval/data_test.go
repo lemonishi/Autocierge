@@ -45,3 +45,19 @@ func TestPredictionsRoundTrip(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, string(raw), "g01")
 }
+
+func TestLabelsMatchDomain(t *testing.T) {
+	for _, u := range eval.UrgencyLabels {
+		assert.True(t, dom.ValidUrgency(dom.Urgency(u)), "UrgencyLabels has unknown value %q", u)
+	}
+	for _, tp := range eval.TypeLabels {
+		assert.True(t, dom.ValidType(dom.TicketType(tp)), "TypeLabels has unknown value %q", tp)
+	}
+}
+
+func TestPredictionCorrect(t *testing.T) {
+	g := eval.GoldEmail{ID: "x", GoldUrgency: "high", GoldType: "billing"}
+	assert.True(t, eval.Prediction{Urgency: "high", Type: "billing"}.Correct(g))
+	assert.False(t, eval.Prediction{Urgency: "low", Type: "billing"}.Correct(g), "wrong urgency")
+	assert.False(t, eval.Prediction{Urgency: "high", Type: "technical"}.Correct(g), "wrong type")
+}

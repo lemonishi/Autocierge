@@ -1,11 +1,15 @@
 // Package eval computes classification-quality metrics for the gold dataset:
 // accuracy, per-class precision/recall/F1, confusion matrices, and a confidence
-// threshold calibration sweep. All functions here are pure; cmd/eval is the only
-// glue that performs I/O or calls the model.
+// threshold calibration sweep.
+//
+// data.go provides the shared types and the file-I/O helpers (LoadGold,
+// LoadPredictions, SavePredictions). The metric-computation functions added in
+// later files are pure; cmd/eval is the only entry point that calls the model.
 package eval
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -57,7 +61,7 @@ func LoadGold(path string) ([]GoldEmail, error) {
 	line := 0
 	for sc.Scan() {
 		line++
-		raw := sc.Bytes()
+		raw := bytes.TrimSpace(sc.Bytes())
 		if len(raw) == 0 {
 			continue
 		}
