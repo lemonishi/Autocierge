@@ -32,6 +32,11 @@ func Calibrate(golds []GoldEmail, preds map[string]Prediction, target float64) C
 		var routed, correct int
 		for _, g := range golds {
 			p, ok := preds[g.ID]
+			// A gold with no prediction is never auto-routed (it would park for
+			// review), so it is excluded from the sweep rather than counted wrong
+			// the way Render's overall/per-dimension accuracy treats it. With the
+			// committed cache fully populated this branch never fires; it only
+			// matters for a stale cache, which Render already flags as a WARNING.
 			if !ok || p.Confidence < thr {
 				continue
 			}
