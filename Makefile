@@ -42,6 +42,7 @@ test-db:
 # Classification quality report. `make eval` replays the committed cache
 # (eval/recorded.json) — free, deterministic, no API key. `make eval-live`
 # calls real Qwen on the gold set and refreshes the cache (spends quota).
+# (Use `go run ./cmd/eval`, not `go build ./cmd/eval` — output name collides with eval/.)
 eval:
 	go run ./cmd/eval
 

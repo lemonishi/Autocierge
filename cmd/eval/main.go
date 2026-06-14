@@ -2,9 +2,15 @@
 // report: accuracy, per-class precision/recall/F1, confusion matrices, and a
 // confidence-threshold calibration sweep.
 //
+// Run from the repository root so the default eval/ paths resolve:
+//
 //	go run ./cmd/eval            # replay the committed cache (eval/recorded.json)
 //	go run ./cmd/eval --live     # classify with real Qwen, refresh the cache
 //	go run ./cmd/eval --fake     # classify with the deterministic fake, refresh the cache
+//
+// Note: `go build ./cmd/eval` fails because the default output name "eval"
+// collides with the eval/ data directory. Use `go run ./cmd/eval` (as `make eval`
+// does) or `go build -o bin/eval ./cmd/eval`.
 package main
 
 import (
