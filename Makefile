@@ -1,4 +1,4 @@
-.PHONY: dev run test test-db build tidy frontend
+.PHONY: dev run test test-db build tidy frontend eval eval-live
 
 # Auto-load app.env (gitignored) so DATABASE_URL / TEST_DATABASE_URL are set
 # without manual exporting. Override per-invocation by setting the var inline.
@@ -38,3 +38,13 @@ test:
 test-db:
 	/opt/homebrew/opt/postgresql@16/bin/createdb -h localhost -p 5433 -O postgres supportsentinel || true
 	/opt/homebrew/opt/postgresql@16/bin/createdb -h localhost -p 5433 -O postgres supportsentinel_test || true
+
+# Classification quality report. `make eval` replays the committed cache
+# (eval/recorded.json) — free, deterministic, no API key. `make eval-live`
+# calls real Qwen on the gold set and refreshes the cache (spends quota).
+# (Use `go run ./cmd/eval`, not `go build ./cmd/eval` — output name collides with eval/.)
+eval:
+	go run ./cmd/eval
+
+eval-live:
+	go run ./cmd/eval --live

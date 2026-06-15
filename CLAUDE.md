@@ -25,6 +25,15 @@ Plans: `docs/superpowers/plans/`.
 - Alerting: `internal/alert` — best-effort `Multi` fan-out (`alert.FromConfig`) of Log +
   Slack webhook + SMTP email, activated by `SLACK_WEBHOOK_URL` / `SMTP_*` config.
   Failures are logged and never block the pipeline.
+- Evaluation: `internal/eval` + `cmd/eval` — gold dataset (`eval/gold.jsonl`, ~30
+  labeled support emails) run through the classifier to produce a quality report:
+  overall accuracy, per-class precision/recall/F1, confusion matrices (urgency &
+  type), and a confidence-threshold calibration sweep that recommends
+  `CONFIDENCE_THRESHOLD` (calibrated, not guessed). `make eval` replays a committed
+  cache (`eval/recorded.json`, bootstrapped from the fake classifier — free,
+  deterministic, no API key); `make eval-live` refreshes it via real Qwen (spends
+  quota). The report recommends the threshold; a human sets it in `app.env`. Pure
+  metrics in `internal/eval` are unit-tested; the report is the source of demo metrics.
 - DB: PostgreSQL (local for dev/test; Alibaba Cloud RDS in prod).
 - Dashboard: `frontend/` (Vite + React + TS + Tailwind v4), two-pane reviewer console
   (queue + detail with reasoning/confidence/tools-used + both checkpoint controls +

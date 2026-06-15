@@ -1,0 +1,212 @@
+{
+  "g01": {
+    "id": "g01",
+    "urgency": "normal",
+    "type": "billing",
+    "department": "billing",
+    "confidence": 0.88
+  },
+  "g02": {
+    "id": "g02",
+    "urgency": "normal",
+    "type": "billing",
+    "department": "billing",
+    "confidence": 0.88
+  },
+  "g03": {
+    "id": "g03",
+    "urgency": "critical",
+    "type": "billing",
+    "department": "billing",
+    "confidence": 0.88
+  },
+  "g04": {
+    "id": "g04",
+    "urgency": "normal",
+    "type": "billing",
+    "department": "billing",
+    "confidence": 0.88
+  },
+  "g05": {
+    "id": "g05",
+    "urgency": "normal",
+    "type": "billing",
+    "department": "billing",
+    "confidence": 0.88
+  },
+  "g06": {
+    "id": "g06",
+    "urgency": "critical",
+    "type": "technical",
+    "department": "engineering",
+    "confidence": 0.86
+  },
+  "g07": {
+    "id": "g07",
+    "urgency": "normal",
+    "type": "general",
+    "department": "support_tier1",
+    "confidence": 0.5
+  },
+  "g08": {
+    "id": "g08",
+    "urgency": "normal",
+    "type": "general",
+    "department": "support_tier1",
+    "confidence": 0.5
+  },
+  "g09": {
+    "id": "g09",
+    "urgency": "critical",
+    "type": "technical",
+    "department": "engineering",
+    "confidence": 0.86
+  },
+  "g10": {
+    "id": "g10",
+    "urgency": "critical",
+    "type": "technical",
+    "department": "engineering",
+    "confidence": 0.86
+  },
+  "g11": {
+    "id": "g11",
+    "urgency": "normal",
+    "type": "account",
+    "department": "accounts",
+    "confidence": 0.84
+  },
+  "g12": {
+    "id": "g12",
+    "urgency": "normal",
+    "type": "account",
+    "department": "accounts",
+    "confidence": 0.84
+  },
+  "g13": {
+    "id": "g13",
+    "urgency": "normal",
+    "type": "account",
+    "department": "accounts",
+    "confidence": 0.84
+  },
+  "g14": {
+    "id": "g14",
+    "urgency": "normal",
+    "type": "general",
+    "department": "support_tier1",
+    "confidence": 0.5
+  },
+  "g15": {
+    "id": "g15",
+    "urgency": "normal",
+    "type": "account",
+    "department": "accounts",
+    "confidence": 0.84
+  },
+  "g16": {
+    "id": "g16",
+    "urgency": "normal",
+    "type": "feature_request",
+    "department": "product",
+    "confidence": 0.82
+  },
+  "g17": {
+    "id": "g17",
+    "urgency": "normal",
+    "type": "general",
+    "department": "support_tier1",
+    "confidence": 0.5
+  },
+  "g18": {
+    "id": "g18",
+    "urgency": "normal",
+    "type": "general",
+    "department": "support_tier1",
+    "confidence": 0.5
+  },
+  "g19": {
+    "id": "g19",
+    "urgency": "normal",
+    "type": "feature_request",
+    "department": "product",
+    "confidence": 0.82
+  },
+  "g20": {
+    "id": "g20",
+    "urgency": "normal",
+    "type": "general",
+    "department": "support_tier1",
+    "confidence": 0.5
+  },
+  "g21": {
+    "id": "g21",
+    "urgency": "critical",
+    "type": "technical",
+    "department": "engineering",
+    "confidence": 0.86
+  },
+  "g22": {
+    "id": "g22",
+    "urgency": "normal",
+    "type": "general",
+    "department": "support_tier1",
+    "confidence": 0.5
+  },
+  "g23": {
+    "id": "g23",
+    "urgency": "normal",
+    "type": "general",
+    "department": "support_tier1",
+    "confidence": 0.5
+  },
+  "g24": {
+    "id": "g24",
+    "urgency": "normal",
+    "type": "general",
+    "department": "support_tier1",
+    "confidence": 0.5
+  },
+  "g25": {
+    "id": "g25",
+    "urgency": "normal",
+    "type": "billing",
+    "department": "billing",
+    "confidence": 0.88
+  },
+  "g26": {
+    "id": "g26",
+    "urgency": "normal",
+    "type": "technical",
+    "department": "engineering",
+    "confidence": 0.86
+  },
+  "g27": {
+    "id": "g27",
+    "urgency": "critical",
+    "type": "feature_request",
+    "department": "product",
+    "confidence": 0.82
+  },
+  "g28": {
+    "id": "g28",
+    "urgency": "normal",
+    "type": "account",
+    "department": "accounts",
+    "confidence": 0.84
+  },
+  "g29": {
+    "id": "g29",
+    "urgency": "normal",
+    "type": "billing",
+    "department": "billing",
+    "confidence": 0.88
+  },
+  "g30": {
+    "id": "g30",
+    "urgency": "normal",
+    "type": "feature_request",
+    "department": "product",
+    "confidence": 0.82
+  }
+}
