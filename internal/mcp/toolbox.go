@@ -46,13 +46,13 @@ func NewToolBox(ctx context.Context, c *mcpclient.Client) (*ToolBox, error) {
 }
 
 // Dial connects to an MCP server over Streamable HTTP and returns a ready ToolBox.
-func Dial(ctx context.Context, url string) (*ToolBox, error) {
-	c, err := mcpclient.NewStreamableHttpClient(url)
+func Dial(ctx context.Context, serverURL string) (*ToolBox, error) {
+	c, err := mcpclient.NewStreamableHttpClient(serverURL)
 	if err != nil {
-		return nil, fmt.Errorf("mcp: dial %s: %w", url, err)
+		return nil, fmt.Errorf("mcp: dial %s: %w", serverURL, err)
 	}
 	if err := c.Start(ctx); err != nil {
-		return nil, fmt.Errorf("mcp: start %s: %w", url, err)
+		return nil, fmt.Errorf("mcp: start %s: %w", serverURL, err)
 	}
 	tb, err := NewToolBox(ctx, c)
 	if err != nil {
@@ -63,6 +63,9 @@ func Dial(ctx context.Context, url string) (*ToolBox, error) {
 }
 
 func (t *ToolBox) Definitions() []qwen.ToolDefinition { return t.defs }
+
+// Close releases the underlying MCP client connection.
+func (t *ToolBox) Close() error { return t.client.Close() }
 
 func (t *ToolBox) Invoke(ctx context.Context, name, argsJSON string) (string, error) {
 	var args map[string]any

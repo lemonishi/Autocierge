@@ -43,6 +43,7 @@ func main() {
 				log.Printf("mcp: dial %s failed (%v); falling back to in-process tools", cfg.MCPServerURL, err)
 			} else {
 				toolBox = mtb
+				defer mtb.Close()
 				source = "MCP " + cfg.MCPServerURL
 			}
 		}

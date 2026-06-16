@@ -1,7 +1,6 @@
 // Package mcp bridges the agent's tools to the Model Context Protocol. NewServer
 // exposes any qwen.ToolBox over MCP (reusing the existing tool implementations);
-// ToolBox (added later) is an MCP-client-backed qwen.ToolBox the classifier
-// consumes at runtime.
+// ToolBox is an MCP-client-backed qwen.ToolBox the classifier consumes at runtime.
 package mcp
 
 import (
