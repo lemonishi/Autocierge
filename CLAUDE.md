@@ -1,7 +1,7 @@
-# SupportSentinel — Project Memory
+# Autocierge — Project Memory
 
 Autopilot support-ticket agent. Hackathon Track 4 (QwenCloud / Alibaba Cloud).
-Full design: `docs/superpowers/specs/2026-06-05-supportsentinel-design.md`.
+Full design: `docs/superpowers/specs/2026-06-05-autocierge-design.md`.
 Plans: `docs/superpowers/plans/`.
 
 ## Stack

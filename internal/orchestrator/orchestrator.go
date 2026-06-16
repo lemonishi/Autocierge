@@ -12,9 +12,9 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/lemonishi/supportsentinel/internal/alert"
-	"github.com/lemonishi/supportsentinel/internal/domain"
-	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/autocierge/internal/alert"
+	"github.com/lemonishi/autocierge/internal/domain"
+	"github.com/lemonishi/autocierge/internal/store"
 )
 
 // ErrInvalidReview is returned when a human review decision contains an invalid enum value.

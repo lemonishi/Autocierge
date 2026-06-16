@@ -1,4 +1,4 @@
-# SupportSentinel — Plan 2: Qwen / DashScope Integration
+# Autocierge — Plan 2: Qwen / DashScope Integration
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,9 +8,9 @@
 
 **Tech Stack:** Go 1.25, standard library `net/http` (no SDK — keeps the proof file self-evidently calling DashScope), `encoding/json`. Tests use `httptest` to simulate DashScope (offline, deterministic); one build-tagged live smoke test hits the real endpoint.
 
-**Spec:** `docs/superpowers/specs/2026-06-05-supportsentinel-design.md` (§4 Qwen client, §7 resilience).
+**Spec:** `docs/superpowers/specs/2026-06-05-autocierge-design.md` (§4 Qwen client, §7 resilience).
 **Builds on:** Plan 1 (`domain.Classifier`, orchestrator, fake classifier remain).
-**Module path:** `github.com/lemonishi/supportsentinel`.
+**Module path:** `github.com/lemonishi/autocierge`.
 
 **Environment facts:**
 - Region: **International (Singapore)** → default base URL `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`, overridable via `DASHSCOPE_BASE_URL`.
@@ -271,7 +271,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 const (
@@ -706,7 +706,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -756,7 +756,7 @@ Expected: clean (compiles under the tag).
 
 - [ ] **Step 3: Wire the Qwen client into `cmd/server/main.go`**
 
-In `cmd/server/main.go`, add `"github.com/lemonishi/supportsentinel/internal/qwen"` to imports, and replace the classifier construction line:
+In `cmd/server/main.go`, add `"github.com/lemonishi/autocierge/internal/qwen"` to imports, and replace the classifier construction line:
 ```go
 	o := orchestrator.New(s, classify.NewFake(), alert.NewLog(), cfg.ConfidenceThreshold)
 ```
@@ -772,7 +772,7 @@ with:
 	}
 	o := orchestrator.New(s, clf, alert.NewLog(), cfg.ConfidenceThreshold)
 ```
-Add `"github.com/lemonishi/supportsentinel/internal/domain"` to imports (for `domain.Classifier`). Keep the `classify` import (still used for the fallback).
+Add `"github.com/lemonishi/autocierge/internal/domain"` to imports (for `domain.Classifier`). Keep the `classify` import (still used for the fallback).
 
 - [ ] **Step 4: Verify build and full suite**
 
@@ -780,7 +780,7 @@ Run:
 ```bash
 go vet ./...
 go build ./...
-TEST_DATABASE_URL='postgres://postgres:postgres@localhost:5433/supportsentinel_test?sslmode=disable' go test ./...
+TEST_DATABASE_URL='postgres://postgres:postgres@localhost:5433/autocierge_test?sslmode=disable' go test ./...
 ```
 Expected: build clean; all tests pass (qwen contract tests run; live tests excluded; DB tests run).
 

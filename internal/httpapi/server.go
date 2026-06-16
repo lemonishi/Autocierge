@@ -8,10 +8,10 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/lemonishi/supportsentinel/internal/domain"
-	"github.com/lemonishi/supportsentinel/internal/orchestrator"
-	"github.com/lemonishi/supportsentinel/internal/store"
-	"github.com/lemonishi/supportsentinel/internal/webui"
+	"github.com/lemonishi/autocierge/internal/domain"
+	"github.com/lemonishi/autocierge/internal/orchestrator"
+	"github.com/lemonishi/autocierge/internal/store"
+	"github.com/lemonishi/autocierge/internal/webui"
 )
 
 func NewServer(o *orchestrator.Orchestrator, s *store.Store) http.Handler {

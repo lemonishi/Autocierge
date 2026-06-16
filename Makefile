@@ -37,8 +37,8 @@ test:
 
 # Convenience: create the local dev + test databases on the Homebrew instance (port 5433).
 test-db:
-	/opt/homebrew/opt/postgresql@16/bin/createdb -h localhost -p 5433 -O postgres supportsentinel || true
-	/opt/homebrew/opt/postgresql@16/bin/createdb -h localhost -p 5433 -O postgres supportsentinel_test || true
+	/opt/homebrew/opt/postgresql@16/bin/createdb -h localhost -p 5433 -O postgres autocierge || true
+	/opt/homebrew/opt/postgresql@16/bin/createdb -h localhost -p 5433 -O postgres autocierge_test || true
 
 # Classification quality report. `make eval` replays the committed cache
 # (eval/recorded.json) — free, deterministic, no API key. `make eval-live`

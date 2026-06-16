@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/autocierge/internal/store"
 )
 
 func (h *handlers) listTickets(w http.ResponseWriter, r *http.Request) {

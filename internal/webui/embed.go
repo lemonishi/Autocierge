@@ -14,7 +14,7 @@ import (
 var distFS embed.FS
 
 const placeholder = `<!doctype html><html><body style="font-family:sans-serif;padding:2rem">
-<h1>SupportSentinel</h1><p>Dashboard not built yet. Run <code>make frontend</code> (or <code>make build</code>) and restart.</p>
+<h1>Autocierge</h1><p>Dashboard not built yet. Run <code>make frontend</code> (or <code>make build</code>) and restart.</p>
 </body></html>`
 
 // Handler serves the embedded SPA: real files when present, with a fallback to

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship everything needed to deploy SupportSentinel on Alibaba Cloud ECS (no Docker — single Go binaries + systemd + nginx, PostgreSQL on RDS) and to submit it for Track 4: a centerpiece README with architecture/state diagrams, deployment artifacts + runbook, a submission deliverables map with demo/proof scripts, and a demo seed script — all framed to surface the four judging criteria.
+**Goal:** Ship everything needed to deploy Autocierge on Alibaba Cloud ECS (no Docker — single Go binaries + systemd + nginx, PostgreSQL on RDS) and to submit it for Track 4: a centerpiece README with architecture/state diagrams, deployment artifacts + runbook, a submission deliverables map with demo/proof scripts, and a demo seed script — all framed to surface the four judging criteria.
 
 **Architecture:** Two cross-compiled binaries (`server`, `mcp-server`) run as systemd units on one ECS instance; nginx terminates TLS (self-signed, over the public IP — no domain) and reverse-proxies to the main server on `localhost:8080`; the MCP tool server stays localhost-only on `:8090`; PostgreSQL is Alibaba Cloud RDS (schema auto-applied on startup). Submission docs live in the repo: README.md (with Mermaid diagrams), `docs/SUBMISSION.md`, and `deploy/`.
 
@@ -11,7 +11,7 @@
 **Design decisions (locked in brainstorming, 2026-06-16):**
 - **No Docker** — single binaries + systemd + nginx (per the project spec §9).
 - **No domain → self-signed TLS over the ECS public IP** (nginx terminates; browser cert warning is acceptable for the demo).
-- **Two systemd units** — `supportsentinel.service` (API + embedded dashboard) and `supportsentinel-mcp.service` (MCP tool server, localhost-only). Prod sets `MCP_SERVER_URL=http://127.0.0.1:8090/mcp`.
+- **Two systemd units** — `autocierge.service` (API + embedded dashboard) and `autocierge-mcp.service` (MCP tool server, localhost-only). Prod sets `MCP_SERVER_URL=http://127.0.0.1:8090/mcp`.
 - **Deploy = config files + `scripts/deploy.sh` + `deploy/README.md` runbook** (re-deploys are one `make deploy`; first-time setup is documented).
 - **Architecture + state-machine diagrams as Mermaid** (render on GitHub; user may export a polished PNG later for the video).
 - **Schema is auto-applied** by `store.New` (embedded `schema.sql`, idempotent) — no manual migration step.
@@ -25,7 +25,7 @@
 
 ## Project facts (use verbatim in the artifacts)
 
-- Repo: `https://github.com/lemonishi/supportsentinel` (public, MIT). Module `github.com/lemonishi/supportsentinel`, Go 1.25.
+- Repo: `https://github.com/lemonishi/autocierge` (public, MIT). Module `github.com/lemonishi/autocierge`, Go 1.25.
 - Main binary: `cmd/server` → serves API + embedded React dashboard on `PORT` (default 8080). MCP binary: `cmd/mcp-server` → MCP Streamable HTTP on `MCP_LISTEN_ADDR` (default `:8090`, path `/mcp`).
 - HTTP API: `POST /api/emails`, `GET /api/tickets`, `GET /api/tickets/{id}`, `GET /api/tickets/{id}/detail`, `GET /api/tickets/{id}/audit`, `POST /api/tickets/{id}/classification-review`, `POST /api/tickets/{id}/reply-approval`, `GET /` (dashboard).
 - Env vars: `PORT`, `CONFIDENCE_THRESHOLD`, `DATABASE_URL` (required), `DASHSCOPE_API_KEY`, `DASHSCOPE_BASE_URL`, `QWEN_MODEL`, `MCP_SERVER_URL`, `MCP_LISTEN_ADDR`, `IMAP_*`, `SMTP_*`, `SLACK_WEBHOOK_URL`.
@@ -43,8 +43,8 @@
 README.md                         → centerpiece (overview, diagrams, quickstart, deploy, criteria) (new)
 docs/architecture.md              → larger Mermaid architecture + state diagrams + prose (new)
 docs/SUBMISSION.md                → deliverables map + demo-video script + proof-recording script (new)
-deploy/supportsentinel.service    → systemd unit (API + dashboard) (new)
-deploy/supportsentinel-mcp.service→ systemd unit (MCP tool server, localhost) (new)
+deploy/autocierge.service    → systemd unit (API + dashboard) (new)
+deploy/autocierge-mcp.service→ systemd unit (MCP tool server, localhost) (new)
 deploy/nginx.conf                 → reverse proxy + self-signed TLS over public IP (new)
 deploy/app.env.prod.example       → production env template (new)
 deploy/README.md                  → first-time ECS+RDS provisioning runbook (new)
@@ -65,17 +65,17 @@ CLAUDE.md                         → add Deployment + Submission docs pointers 
 - [ ] **Step 1: Write `README.md`** with exactly this content:
 
 ````markdown
-# SupportSentinel
+# Autocierge
 
 > Autopilot support-ticket agent — turns inbound support emails into triaged, routed, and drafted-reply tickets with two human-in-the-loop checkpoints. Built on **Qwen via Alibaba Cloud Model Studio (DashScope)**.
 
 **Hackathon Track 4: Autopilot Agent (QwenCloud / Alibaba Cloud).** Open source under the MIT License.
 
-SupportSentinel ingests support emails (HTTP or IMAP), classifies **urgency** and **type** with Qwen — invoking tools over the **Model Context Protocol** to disambiguate hard cases — routes them through a deterministic state machine, and parks low-confidence or critical tickets for human review. Every reply is human-approved before it would be sent. Every state change is written to an append-only audit log in the same transaction. **It fails toward a human — it never silently drops a ticket.**
+Autocierge ingests support emails (HTTP or IMAP), classifies **urgency** and **type** with Qwen — invoking tools over the **Model Context Protocol** to disambiguate hard cases — routes them through a deterministic state machine, and parks low-confidence or critical tickets for human review. Every reply is human-approved before it would be sent. Every state change is written to an append-only audit log in the same transaction. **It fails toward a human — it never silently drops a ticket.**
 
 ## Why this matters
 
-Support teams drown in inbound email: triage is slow, inconsistent, and the urgent ticket hides among the routine ones. SupportSentinel automates the triage-and-draft loop while keeping a human in control of anything risky — a production-shaped workflow (auditability, resilience, evaluation), not a chatbot demo. It is built to be deployed (single binary + systemd + nginx on Alibaba Cloud ECS, PostgreSQL on RDS) and to be measured (a calibrated evaluation harness, below).
+Support teams drown in inbound email: triage is slow, inconsistent, and the urgent ticket hides among the routine ones. Autocierge automates the triage-and-draft loop while keeping a human in control of anything risky — a production-shaped workflow (auditability, resilience, evaluation), not a chatbot demo. It is built to be deployed (single binary + systemd + nginx on Alibaba Cloud ECS, PostgreSQL on RDS) and to be measured (a calibrated evaluation harness, below).
 
 ## Architecture
 
@@ -88,12 +88,12 @@ flowchart TB
 
     subgraph ECS["Alibaba Cloud ECS (no Docker)"]
         NGINX["nginx<br/>(TLS, reverse proxy)"]
-        subgraph SERVER["supportsentinel.service :8080"]
+        subgraph SERVER["autocierge.service :8080"]
             ORCH["Orchestrator<br/>deterministic state machine"]
             QWEN["Qwen client<br/>(DashScope, JSON-mode + retry)"]
             UI["Embedded React dashboard"]
         end
-        MCP["supportsentinel-mcp.service :8090<br/>MCP tool server (lookup_customer,<br/>lookup_similar_tickets)"]
+        MCP["autocierge-mcp.service :8090<br/>MCP tool server (lookup_customer,<br/>lookup_similar_tickets)"]
     end
 
     ALI["Alibaba Cloud Model Studio<br/>(Qwen / DashScope)"]
@@ -216,7 +216,7 @@ First-time setup (ECS, RDS, self-signed TLS, systemd units) is documented in [de
 ````markdown
 # Architecture
 
-SupportSentinel is a deterministic agent: a Go state machine drives every ticket from ingestion through two human-in-the-loop checkpoints, calling Qwen for the non-deterministic parts (classification, reply drafting) and recording every step in an append-only audit log.
+Autocierge is a deterministic agent: a Go state machine drives every ticket from ingestion through two human-in-the-loop checkpoints, calling Qwen for the non-deterministic parts (classification, reply drafting) and recording every step in an append-only audit log.
 
 ## Components
 
@@ -257,7 +257,7 @@ flowchart LR
 
 ## Deployment topology
 
-Two systemd-managed binaries on one ECS instance — `supportsentinel.service` (API + embedded dashboard, `:8080`) and `supportsentinel-mcp.service` (MCP tool server, `:8090`, localhost-only). nginx terminates TLS and reverse-proxies the public interface to `:8080`. PostgreSQL is Alibaba Cloud RDS. See [../deploy/README.md](../deploy/README.md).
+Two systemd-managed binaries on one ECS instance — `autocierge.service` (API + embedded dashboard, `:8080`) and `autocierge-mcp.service` (MCP tool server, `:8090`, localhost-only). nginx terminates TLS and reverse-proxies the public interface to `:8080`. PostgreSQL is Alibaba Cloud RDS. See [../deploy/README.md](../deploy/README.md).
 ````
 
 - [ ] **Step 3: Verify the Mermaid blocks are well-formed.** Run a quick fence/sanity check:
@@ -280,44 +280,44 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 2: Deployment artifacts (systemd, nginx, prod env) + build both binaries
 
 **Files:**
-- Create: `deploy/supportsentinel.service`, `deploy/supportsentinel-mcp.service`, `deploy/nginx.conf`, `deploy/app.env.prod.example`
+- Create: `deploy/autocierge.service`, `deploy/autocierge-mcp.service`, `deploy/nginx.conf`, `deploy/app.env.prod.example`
 - Modify: `Makefile` (build both binaries)
 
-- [ ] **Step 1: Create `deploy/supportsentinel.service`:**
+- [ ] **Step 1: Create `deploy/autocierge.service`:**
 ```ini
 [Unit]
-Description=SupportSentinel API + dashboard
-After=network-online.target supportsentinel-mcp.service
+Description=Autocierge API + dashboard
+After=network-online.target autocierge-mcp.service
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=supportsentinel
-EnvironmentFile=/etc/supportsentinel/app.env
-ExecStart=/opt/supportsentinel/server
+User=autocierge
+EnvironmentFile=/etc/autocierge/app.env
+ExecStart=/opt/autocierge/server
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/supportsentinel
+ReadWritePaths=/opt/autocierge
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-- [ ] **Step 2: Create `deploy/supportsentinel-mcp.service`:**
+- [ ] **Step 2: Create `deploy/autocierge-mcp.service`:**
 ```ini
 [Unit]
-Description=SupportSentinel MCP tool server (localhost only)
+Description=Autocierge MCP tool server (localhost only)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=supportsentinel
-EnvironmentFile=/etc/supportsentinel/app.env
-ExecStart=/opt/supportsentinel/mcp-server
+User=autocierge
+EnvironmentFile=/etc/autocierge/app.env
+ExecStart=/opt/autocierge/mcp-server
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=true
@@ -330,8 +330,8 @@ WantedBy=multi-user.target
 
 - [ ] **Step 3: Create `deploy/nginx.conf`** (self-signed TLS over the public IP; does NOT expose the MCP server):
 ```nginx
-# SupportSentinel — nginx reverse proxy with self-signed TLS over the ECS public IP.
-# Install to /etc/nginx/conf.d/supportsentinel.conf, then `nginx -t && systemctl reload nginx`.
+# Autocierge — nginx reverse proxy with self-signed TLS over the ECS public IP.
+# Install to /etc/nginx/conf.d/autocierge.conf, then `nginx -t && systemctl reload nginx`.
 # The MCP server (:8090) is intentionally NOT proxied — it stays localhost-only.
 
 server {
@@ -344,8 +344,8 @@ server {
     listen 443 ssl default_server;
     server_name _;
 
-    ssl_certificate     /etc/nginx/ssl/supportsentinel.crt;
-    ssl_certificate_key /etc/nginx/ssl/supportsentinel.key;
+    ssl_certificate     /etc/nginx/ssl/autocierge.crt;
+    ssl_certificate_key /etc/nginx/ssl/autocierge.key;
     ssl_protocols TLSv1.2 TLSv1.3;
 
     client_max_body_size 2m;
@@ -362,9 +362,9 @@ server {
 
 - [ ] **Step 4: Create `deploy/app.env.prod.example`:**
 ```bash
-# SupportSentinel production environment (Alibaba Cloud ECS).
-# Install the filled-in copy to /etc/supportsentinel/app.env (chmod 600, owned by
-# the supportsentinel user). NEVER commit the filled-in version — secrets live
+# Autocierge production environment (Alibaba Cloud ECS).
+# Install the filled-in copy to /etc/autocierge/app.env (chmod 600, owned by
+# the autocierge user). NEVER commit the filled-in version — secrets live
 # only on the server.
 
 PORT=8080
@@ -372,14 +372,14 @@ PORT=8080
 CONFIDENCE_THRESHOLD=0.95
 
 # Alibaba Cloud RDS PostgreSQL (managed RDS requires TLS).
-DATABASE_URL=postgres://USER:PASSWORD@RDS_HOST:5432/supportsentinel?sslmode=require
+DATABASE_URL=postgres://USER:PASSWORD@RDS_HOST:5432/autocierge?sslmode=require
 
 # Qwen / Alibaba Cloud Model Studio (DashScope, International endpoint).
 DASHSCOPE_API_KEY=
 DASHSCOPE_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 QWEN_MODEL=qwen-plus
 
-# MCP tool server (runs as supportsentinel-mcp.service on localhost).
+# MCP tool server (runs as autocierge-mcp.service on localhost).
 MCP_LISTEN_ADDR=:8090
 MCP_SERVER_URL=http://127.0.0.1:8090/mcp
 
@@ -418,7 +418,7 @@ Expected: both exist and report `ELF 64-bit ... x86-64` (linux binaries cross-co
 
 - [ ] **Step 7: Commit:**
 ```bash
-git add deploy/supportsentinel.service deploy/supportsentinel-mcp.service deploy/nginx.conf deploy/app.env.prod.example Makefile
+git add deploy/autocierge.service deploy/autocierge-mcp.service deploy/nginx.conf deploy/app.env.prod.example Makefile
 git commit -m "feat(deploy): systemd units, nginx self-signed TLS, prod env, build both binaries
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -435,18 +435,18 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - [ ] **Step 1: Create `scripts/deploy.sh`:**
 ```bash
 #!/usr/bin/env bash
-# Deploy SupportSentinel to an Alibaba Cloud ECS instance: cross-compile both
+# Deploy Autocierge to an Alibaba Cloud ECS instance: cross-compile both
 # binaries, copy them over, and restart the systemd services.
 #
 #   DEPLOY_HOST=<ecs-public-ip> DEPLOY_USER=<user> ./scripts/deploy.sh
 #
-# Assumes first-time setup (user, /opt/supportsentinel, /etc/supportsentinel/app.env,
+# Assumes first-time setup (user, /opt/autocierge, /etc/autocierge/app.env,
 # systemd units, nginx) is already done — see deploy/README.md.
 set -euo pipefail
 
 : "${DEPLOY_HOST:?set DEPLOY_HOST to the ECS public IP or hostname}"
 DEPLOY_USER="${DEPLOY_USER:-root}"
-REMOTE_DIR="/opt/supportsentinel"
+REMOTE_DIR="/opt/autocierge"
 SSH_TARGET="${DEPLOY_USER}@${DEPLOY_HOST}"
 
 echo "==> building frontend + linux/amd64 binaries"
@@ -457,7 +457,7 @@ ssh "${SSH_TARGET}" "sudo install -d -o '${DEPLOY_USER}' '${REMOTE_DIR}'"
 scp bin/server bin/mcp-server "${SSH_TARGET}:${REMOTE_DIR}/"
 
 echo "==> restarting services (mcp first, then api)"
-ssh "${SSH_TARGET}" "sudo systemctl restart supportsentinel-mcp.service supportsentinel.service && sudo systemctl --no-pager --lines=0 status supportsentinel.service"
+ssh "${SSH_TARGET}" "sudo systemctl restart autocierge-mcp.service autocierge.service && sudo systemctl --no-pager --lines=0 status autocierge.service"
 
 echo "==> done — check: https://${DEPLOY_HOST}/  (self-signed cert warning is expected)"
 ```
@@ -541,21 +541,21 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - [ ] **Step 1: Write `deploy/README.md`** with exactly this content:
 
 ````markdown
-# Deploying SupportSentinel on Alibaba Cloud (no Docker)
+# Deploying Autocierge on Alibaba Cloud (no Docker)
 
 One ECS instance runs two systemd services; nginx terminates TLS and proxies to the API; PostgreSQL is Alibaba Cloud RDS. Re-deploys are one `make deploy`; this runbook covers the one-time setup.
 
 ## 0. Provision
 
 - **ECS:** a small Linux instance (Ubuntu 22.04 / Alibaba Cloud Linux). Open security-group inbound ports **80** and **443** to the internet, **22** to your IP. Do NOT expose 8080/8090.
-- **RDS:** an Alibaba Cloud RDS for PostgreSQL instance. Create a database `supportsentinel` and a user. Add the ECS instance's IP/VPC to the RDS whitelist. Note the connection string; managed RDS requires TLS (`sslmode=require`). The app applies its schema automatically on first connect (embedded `schema.sql`) — no manual migration.
+- **RDS:** an Alibaba Cloud RDS for PostgreSQL instance. Create a database `autocierge` and a user. Add the ECS instance's IP/VPC to the RDS whitelist. Note the connection string; managed RDS requires TLS (`sslmode=require`). The app applies its schema automatically on first connect (embedded `schema.sql`) — no manual migration.
 
 ## 1. Server user + directory
 
 ```bash
-sudo useradd --system --no-create-home --shell /usr/sbin/nologin supportsentinel
-sudo install -d -o "$USER" /opt/supportsentinel
-sudo install -d /etc/supportsentinel
+sudo useradd --system --no-create-home --shell /usr/sbin/nologin autocierge
+sudo install -d -o "$USER" /opt/autocierge
+sudo install -d /etc/autocierge
 ```
 
 ## 2. Environment file
@@ -563,17 +563,17 @@ sudo install -d /etc/supportsentinel
 Copy `deploy/app.env.prod.example` to the server, fill in `DATABASE_URL` (RDS) and `DASHSCOPE_API_KEY` (and optionally IMAP/SMTP/Slack), and install it locked down:
 
 ```bash
-sudo install -m 600 -o supportsentinel app.env.prod /etc/supportsentinel/app.env
+sudo install -m 600 -o autocierge app.env.prod /etc/autocierge/app.env
 ```
 
 ## 3. systemd units
 
 ```bash
-sudo cp deploy/supportsentinel.service deploy/supportsentinel-mcp.service /etc/systemd/system/
+sudo cp deploy/autocierge.service deploy/autocierge-mcp.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now supportsentinel-mcp.service supportsentinel.service
-sudo systemctl --no-pager status supportsentinel.service
-journalctl -u supportsentinel.service -n 50 --no-pager   # look for "listening on :8080"
+sudo systemctl enable --now autocierge-mcp.service autocierge.service
+sudo systemctl --no-pager status autocierge.service
+journalctl -u autocierge.service -n 50 --no-pager   # look for "listening on :8080"
 ```
 
 ## 4. Self-signed TLS + nginx
@@ -581,10 +581,10 @@ journalctl -u supportsentinel.service -n 50 --no-pager   # look for "listening o
 ```bash
 sudo install -d /etc/nginx/ssl
 sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout /etc/nginx/ssl/supportsentinel.key \
-  -out    /etc/nginx/ssl/supportsentinel.crt \
+  -keyout /etc/nginx/ssl/autocierge.key \
+  -out    /etc/nginx/ssl/autocierge.crt \
   -subj "/CN=$(curl -s ifconfig.me)"
-sudo cp deploy/nginx.conf /etc/nginx/conf.d/supportsentinel.conf
+sudo cp deploy/nginx.conf /etc/nginx/conf.d/autocierge.conf
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
@@ -598,19 +598,19 @@ From your laptop (repo root):
 DEPLOY_HOST=<ecs-public-ip> DEPLOY_USER=<ssh-user> make deploy
 ```
 
-This cross-compiles `server` + `mcp-server`, copies them to `/opt/supportsentinel/`, and restarts the services. Re-run it for every subsequent deploy.
+This cross-compiles `server` + `mcp-server`, copies them to `/opt/autocierge/`, and restarts the services. Re-run it for every subsequent deploy.
 
 ## Verify
 
-- `systemctl status supportsentinel.service supportsentinel-mcp.service` — both `active (running)`.
-- `journalctl -u supportsentinel.service` shows `classifier: Qwen via DashScope (model=...) with tools (MCP http://127.0.0.1:8090/mcp)`.
+- `systemctl status autocierge.service autocierge-mcp.service` — both `active (running)`.
+- `journalctl -u autocierge.service` shows `classifier: Qwen via DashScope (model=...) with tools (MCP http://127.0.0.1:8090/mcp)`.
 - `curl -k https://<ip>/api/tickets` returns JSON.
 - POST a ticket: `curl -k -X POST https://<ip>/api/emails -H 'content-type: application/json' -d '{"from":"a@b.com","subject":"test","body":"hello"}'`.
 
 ## Troubleshooting
 
-- **Service crash-loops:** `journalctl -u supportsentinel.service -n 100` — usually a bad `DATABASE_URL` or missing `DASHSCOPE_API_KEY` (the latter falls back to the fake classifier, not a crash).
-- **MCP fallback:** if `supportsentinel-mcp.service` is down, the API logs `mcp: dial ... failed; falling back to in-process tools` and still serves — tools just run in-process.
+- **Service crash-loops:** `journalctl -u autocierge.service -n 100` — usually a bad `DATABASE_URL` or missing `DASHSCOPE_API_KEY` (the latter falls back to the fake classifier, not a crash).
+- **MCP fallback:** if `autocierge-mcp.service` is down, the API logs `mcp: dial ... failed; falling back to in-process tools` and still serves — tools just run in-process.
 - **RDS connection refused:** check the RDS whitelist includes the ECS IP and that `sslmode=require` is set.
 ````
 
@@ -638,10 +638,10 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - [ ] **Step 1: Write `docs/SUBMISSION.md`** with exactly this content:
 
 ````markdown
-# Track 4 Submission — SupportSentinel
+# Track 4 Submission — Autocierge
 
 **Track:** Track 4 — Autopilot Agent (QwenCloud / Alibaba Cloud)
-**Repo:** https://github.com/lemonishi/supportsentinel (public, MIT)
+**Repo:** https://github.com/lemonishi/autocierge (public, MIT)
 **Proof of Alibaba Cloud:** [`internal/qwen/client.go`](../internal/qwen/client.go) (Qwen via DashScope) + Alibaba Cloud RDS (`DATABASE_URL`) + Alibaba Cloud ECS deploy ([deploy/](../deploy/)).
 
 ## Deliverables checklist
@@ -656,7 +656,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ## Description (text submission)
 
-SupportSentinel is an autopilot support-ticket agent. It ingests support emails (HTTP or IMAP), classifies urgency and type with **Qwen on Alibaba Cloud Model Studio (DashScope)** — invoking tools over the **Model Context Protocol** to disambiguate hard cases — and routes them through a deterministic Go state machine with two human-in-the-loop checkpoints: low-confidence or critical tickets park for review, and every drafted reply is human-approved before sending. Every state change is written to an append-only audit log in the same transaction, so the whole lifecycle is replayable. It fails toward a human — classifier errors park for review rather than dropping the ticket. Classification quality is measured by a gold-dataset evaluation harness that calibrates the review threshold (not guessed). It deploys without Docker: single Go binaries + systemd + nginx on Alibaba Cloud ECS, with PostgreSQL on Alibaba Cloud RDS.
+Autocierge is an autopilot support-ticket agent. It ingests support emails (HTTP or IMAP), classifies urgency and type with **Qwen on Alibaba Cloud Model Studio (DashScope)** — invoking tools over the **Model Context Protocol** to disambiguate hard cases — and routes them through a deterministic Go state machine with two human-in-the-loop checkpoints: low-confidence or critical tickets park for review, and every drafted reply is human-approved before sending. Every state change is written to an append-only audit log in the same transaction, so the whole lifecycle is replayable. It fails toward a human — classifier errors park for review rather than dropping the ticket. Classification quality is measured by a gold-dataset evaluation harness that calibrates the review threshold (not guessed). It deploys without Docker: single Go binaries + systemd + nginx on Alibaba Cloud ECS, with PostgreSQL on Alibaba Cloud RDS.
 
 ## How it maps to the judging criteria
 
@@ -681,8 +681,8 @@ SupportSentinel is an autopilot support-ticket agent. It ingests support emails 
 Record a screen capture on the ECS instance (or SSH'd in):
 
 1. `cat internal/qwen/client.go | head -40` — show the DashScope base URL + model (the proof file).
-2. `systemctl status supportsentinel.service supportsentinel-mcp.service` — both active on ECS.
-3. `journalctl -u supportsentinel.service -n 20` — show `classifier: Qwen via DashScope (model=...) with tools (MCP ...)`.
+2. `systemctl status autocierge.service autocierge-mcp.service` — both active on ECS.
+3. `journalctl -u autocierge.service -n 20` — show `classifier: Qwen via DashScope (model=...) with tools (MCP ...)`.
 4. `curl -k -X POST https://<ecs-ip>/api/emails -H 'content-type: application/json' -d '{"from":"a@b.com","subject":"prod down","body":"everything is 500ing"}'` — a live request hitting Qwen on Alibaba Cloud, returning a classified ticket.
 5. Show the Alibaba Cloud console: the ECS instance + the RDS PostgreSQL instance.
 ````

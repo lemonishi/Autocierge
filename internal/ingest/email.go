@@ -1,4 +1,4 @@
-// Package ingest provides email parsing and IMAP ingestion for SupportSentinel.
+// Package ingest provides email parsing and IMAP ingestion for Autocierge.
 package ingest
 
 import (
@@ -15,7 +15,7 @@ import (
 
 	gomessagemail "github.com/emersion/go-message/mail"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 // ParseRFC822 turns a raw RFC822 email message into a normalized domain.Email.

@@ -88,8 +88,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/mcp"
-	"github.com/lemonishi/supportsentinel/internal/qwen"
+	"github.com/lemonishi/autocierge/internal/mcp"
+	"github.com/lemonishi/autocierge/internal/qwen"
 	mcpgo "github.com/mark3labs/mcp-go/mcp"
 	mcpclient "github.com/mark3labs/mcp-go/client"
 	"github.com/stretchr/testify/assert"
@@ -172,12 +172,12 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/lemonishi/supportsentinel/internal/qwen"
+	"github.com/lemonishi/autocierge/internal/qwen"
 	mcpgo "github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
 
-const serverName = "supportsentinel-tools"
+const serverName = "autocierge-tools"
 const serverVersion = "1.0.0"
 
 // NewServer builds an MCP server that exposes every tool in tb. Each tool's JSON
@@ -293,7 +293,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/lemonishi/supportsentinel/internal/qwen"
+	"github.com/lemonishi/autocierge/internal/qwen"
 	mcpclient "github.com/mark3labs/mcp-go/client"
 	mcpgo "github.com/mark3labs/mcp-go/mcp"
 )
@@ -425,7 +425,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - [ ] **Step 1: Implement** `cmd/mcp-server/main.go`. It opens the store (reusing the same pattern as `cmd/server`), builds the in-process `tools.Box`, wraps it with `mcp.NewServer`, and serves it over Streamable HTTP. It reads `DATABASE_URL` (via `config.Load`) and `MCP_LISTEN_ADDR` (default `:8090`).
 
 ```go
-// Command mcp-server serves SupportSentinel's agent tools (lookup_customer,
+// Command mcp-server serves Autocierge's agent tools (lookup_customer,
 // lookup_similar_tickets) over the Model Context Protocol (Streamable HTTP).
 // The main server's MCP-backed ToolBox connects to it; run it via `make mcp`.
 //
@@ -438,10 +438,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/lemonishi/supportsentinel/internal/config"
-	"github.com/lemonishi/supportsentinel/internal/mcp"
-	"github.com/lemonishi/supportsentinel/internal/store"
-	"github.com/lemonishi/supportsentinel/internal/tools"
+	"github.com/lemonishi/autocierge/internal/config"
+	"github.com/lemonishi/autocierge/internal/mcp"
+	"github.com/lemonishi/autocierge/internal/store"
+	"github.com/lemonishi/autocierge/internal/tools"
 	mcpserver "github.com/mark3labs/mcp-go/server"
 )
 
@@ -563,7 +563,7 @@ and in `Load()`, after the alerting block:
 - [ ] **Step 5: Wire the main server with fallback.** In `cmd/server/main.go`, add the `mcp` import:
 
 ```go
-	"github.com/lemonishi/supportsentinel/internal/mcp"
+	"github.com/lemonishi/autocierge/internal/mcp"
 ```
 
 Then replace the tool attachment block. The current code is:

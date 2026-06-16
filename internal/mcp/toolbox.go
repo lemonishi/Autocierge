@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/lemonishi/supportsentinel/internal/qwen"
+	"github.com/lemonishi/autocierge/internal/qwen"
 	mcpclient "github.com/mark3labs/mcp-go/client"
 	mcpgo "github.com/mark3labs/mcp-go/mcp"
 )

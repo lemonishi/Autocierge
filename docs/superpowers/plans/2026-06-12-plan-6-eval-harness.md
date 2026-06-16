@@ -128,7 +128,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/eval"
+	"github.com/lemonishi/autocierge/internal/eval"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -176,7 +176,7 @@ func TestPredictionsRoundTrip(t *testing.T) {
 Add these helpers at the bottom of the same test file (the test asserts dataset validity using the domain validators):
 
 ```go
-import dom "github.com/lemonishi/supportsentinel/internal/domain"
+import dom "github.com/lemonishi/autocierge/internal/domain"
 
 func domainValidUrgency(u dom.Urgency) bool  { return dom.ValidUrgency(u) }
 func domainValidType(t dom.TicketType) bool  { return dom.ValidType(t) }
@@ -204,7 +204,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 // GoldEmail is one labeled example from eval/gold.jsonl.
@@ -323,7 +323,7 @@ package eval_test
 import (
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/eval"
+	"github.com/lemonishi/autocierge/internal/eval"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -493,7 +493,7 @@ package eval_test
 import (
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/eval"
+	"github.com/lemonishi/autocierge/internal/eval"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -656,7 +656,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/eval"
+	"github.com/lemonishi/autocierge/internal/eval"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -732,7 +732,7 @@ func Render(golds []GoldEmail, preds map[string]Prediction, target float64) stri
 		}
 	}
 
-	fmt.Fprintf(&b, "SupportSentinel — Classification Quality Report\n")
+	fmt.Fprintf(&b, "Autocierge — Classification Quality Report\n")
 	fmt.Fprintf(&b, "Gold examples: %d\n", len(golds))
 	overall := 0.0
 	if len(golds) > 0 {
@@ -852,10 +852,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/lemonishi/supportsentinel/internal/classify"
-	"github.com/lemonishi/supportsentinel/internal/domain"
-	"github.com/lemonishi/supportsentinel/internal/eval"
-	"github.com/lemonishi/supportsentinel/internal/qwen"
+	"github.com/lemonishi/autocierge/internal/classify"
+	"github.com/lemonishi/autocierge/internal/domain"
+	"github.com/lemonishi/autocierge/internal/eval"
+	"github.com/lemonishi/autocierge/internal/qwen"
 )
 
 func main() {

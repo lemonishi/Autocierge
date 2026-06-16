@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 const (

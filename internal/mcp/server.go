@@ -8,12 +8,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/lemonishi/supportsentinel/internal/qwen"
+	"github.com/lemonishi/autocierge/internal/qwen"
 	mcpgo "github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
 
-const serverName = "supportsentinel-tools"
+const serverName = "autocierge-tools"
 const serverVersion = "1.0.0"
 
 // NewServer builds an MCP server that exposes every tool in tb. Each tool's JSON

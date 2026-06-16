@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/lemonishi/supportsentinel/internal/config"
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/config"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 // Multi fans out an Alert call to every child alerter. Failures are logged

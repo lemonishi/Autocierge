@@ -9,10 +9,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/alert"
-	"github.com/lemonishi/supportsentinel/internal/classify"
-	"github.com/lemonishi/supportsentinel/internal/orchestrator"
-	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/autocierge/internal/alert"
+	"github.com/lemonishi/autocierge/internal/classify"
+	"github.com/lemonishi/autocierge/internal/orchestrator"
+	"github.com/lemonishi/autocierge/internal/store"
 	"github.com/stretchr/testify/require"
 )
 

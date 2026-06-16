@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 	"github.com/stretchr/testify/require"
 )
 

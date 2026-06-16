@@ -1,4 +1,4 @@
-# SupportSentinel — Plan 4: React Dashboard (reviewer console)
+# Autocierge — Plan 4: React Dashboard (reviewer console)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,7 +8,7 @@
 
 **Tech Stack:** Go 1.25 (`embed`, `net/http`), pgx. Frontend: Vite + React 18 + TypeScript + Tailwind v4 (`@tailwindcss/vite`). Backend tests via `httptest`+DB; frontend gated on typecheck+build (the dashboard's real validation is manual/demo per the design spec).
 
-**Spec:** `docs/superpowers/specs/2026-06-05-supportsentinel-design.md` (§1 dashboard, §3 component 6). **Builds on:** Plans 1–3. **Module path:** `github.com/lemonishi/supportsentinel`. **Env:** Postgres on 5433 (`TEST_DATABASE_URL`), Node 24/npm. Commit with the repo's git config (`Lennon <lemoncode8888@gmail.com>`); never override the author email.
+**Spec:** `docs/superpowers/specs/2026-06-05-autocierge-design.md` (§1 dashboard, §3 component 6). **Builds on:** Plans 1–3. **Module path:** `github.com/lemonishi/autocierge`. **Env:** Postgres on 5433 (`TEST_DATABASE_URL`), Node 24/npm. Commit with the repo's git config (`Lennon <lemoncode8888@gmail.com>`); never override the author email.
 
 ---
 
@@ -46,7 +46,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -108,7 +108,7 @@ func TestGetLatestClassificationAndReply(t *testing.T) {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `TEST_DATABASE_URL='postgres://postgres:postgres@localhost:5433/supportsentinel_test?sslmode=disable' go test ./internal/store/ -run 'ListTickets|LatestClassification' -v`
+Run: `TEST_DATABASE_URL='postgres://postgres:postgres@localhost:5433/autocierge_test?sslmode=disable' go test ./internal/store/ -run 'ListTickets|LatestClassification' -v`
 Expected: FAIL — undefined `ListTickets`, etc.
 
 - [ ] **Step 3: Implement**
@@ -125,7 +125,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 // TicketSummary is one row in the dashboard queue.
@@ -331,7 +331,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/autocierge/internal/store"
 )
 
 func (h *handlers) listTickets(w http.ResponseWriter, r *http.Request) {
@@ -515,7 +515,7 @@ import (
 var distFS embed.FS
 
 const placeholder = `<!doctype html><html><body style="font-family:sans-serif;padding:2rem">
-<h1>SupportSentinel</h1><p>Dashboard not built yet. Run <code>make frontend</code> (or <code>make build</code>) and restart.</p>
+<h1>Autocierge</h1><p>Dashboard not built yet. Run <code>make frontend</code> (or <code>make build</code>) and restart.</p>
 </body></html>`
 
 // Handler serves the embedded SPA: real files when present, with a fallback to
@@ -561,7 +561,7 @@ func serveIndex(w http.ResponseWriter, indexHTML []byte) {
 
 - [ ] **Step 5: Mount the SPA in the server**
 
-In `internal/httpapi/server.go`: add the import `"github.com/lemonishi/supportsentinel/internal/webui"`, and at the END of `NewServer` (after all `/api/...` routes) register the catch-all:
+In `internal/httpapi/server.go`: add the import `"github.com/lemonishi/autocierge/internal/webui"`, and at the END of `NewServer` (after all `/api/...` routes) register the catch-all:
 ```go
 	mux.Handle("/", webui.Handler())
 ```
@@ -618,7 +618,7 @@ git commit -m "feat(webui): embed and serve the SPA with placeholder fallback"
 `frontend/package.json`:
 ```json
 {
-  "name": "supportsentinel-dashboard",
+  "name": "autocierge-dashboard",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -706,7 +706,7 @@ export default defineConfig({
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SupportSentinel</title>
+    <title>Autocierge</title>
   </head>
   <body>
     <div id="root"></div>
@@ -825,7 +825,7 @@ export const api = {
 `frontend/src/App.tsx` (minimal placeholder — replaced in Task 5):
 ```tsx
 export default function App() {
-  return <div className="p-8 text-2xl font-bold">SupportSentinel (scaffold)</div>;
+  return <div className="p-8 text-2xl font-bold">Autocierge (scaffold)</div>;
 }
 ```
 
@@ -1162,7 +1162,7 @@ export default function App() {
   return (
     <div className="flex h-screen flex-col bg-gray-50 text-gray-900">
       <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3">
-        <h1 className="text-lg font-bold">SupportSentinel <span className="text-gray-400">reviewer console</span></h1>
+        <h1 className="text-lg font-bold">Autocierge <span className="text-gray-400">reviewer console</span></h1>
         {error && <span className="text-sm text-red-600">{error}</span>}
       </header>
       <div className="flex min-h-0 flex-1">
@@ -1222,7 +1222,7 @@ Run:
 ```bash
 go vet ./...
 go build ./...
-TEST_DATABASE_URL='postgres://postgres:postgres@localhost:5433/supportsentinel_test?sslmode=disable' go test ./...
+TEST_DATABASE_URL='postgres://postgres:postgres@localhost:5433/autocierge_test?sslmode=disable' go test ./...
 ```
 Expected: all green (backend tests; webui serves the built app).
 

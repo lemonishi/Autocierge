@@ -1,6 +1,6 @@
 # Architecture
 
-SupportSentinel is a deterministic agent: a Go state machine drives every ticket from ingestion through two human-in-the-loop checkpoints, calling Qwen for the non-deterministic parts (classification, reply drafting) and recording every step in an append-only audit log.
+Autocierge is a deterministic agent: a Go state machine drives every ticket from ingestion through two human-in-the-loop checkpoints, calling Qwen for the non-deterministic parts (classification, reply drafting) and recording every step in an append-only audit log.
 
 ## Components
 
@@ -41,4 +41,4 @@ flowchart LR
 
 ## Deployment topology
 
-Two systemd-managed binaries on one ECS instance — `supportsentinel.service` (API + embedded dashboard, `:8080`) and `supportsentinel-mcp.service` (MCP tool server, `:8090`, localhost-only). nginx terminates TLS and reverse-proxies the public interface to `:8080`. PostgreSQL is Alibaba Cloud RDS. See [../deploy/README.md](../deploy/README.md).
+Two systemd-managed binaries on one ECS instance — `autocierge.service` (API + embedded dashboard, `:8080`) and `autocierge-mcp.service` (MCP tool server, `:8090`, localhost-only). nginx terminates TLS and reverse-proxies the public interface to `:8080`. PostgreSQL is Alibaba Cloud RDS. See [../deploy/README.md](../deploy/README.md).
