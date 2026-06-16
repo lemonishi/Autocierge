@@ -1,0 +1,19 @@
+[Unit]
+Description=SupportSentinel API + dashboard
+After=network-online.target supportsentinel-mcp.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=supportsentinel
+EnvironmentFile=/etc/supportsentinel/app.env
+ExecStart=/opt/supportsentinel/server
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/supportsentinel
+
+[Install]
+WantedBy=multi-user.target
