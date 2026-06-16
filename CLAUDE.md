@@ -15,6 +15,14 @@ Plans: `docs/superpowers/plans/`.
   `lookup_similar_tickets`, store-backed, attached via `qwen.Client.WithTools`. The
   classifier invokes them during Classify; invocations are recorded in
   `classifications.tools_used`. Demo customers seeded at server startup.
+- MCP: `internal/mcp` + `cmd/mcp-server` — the same tool layer exposed over the
+  Model Context Protocol (`github.com/mark3labs/mcp-go`, Streamable HTTP). The
+  classifier consumes tools over MCP at runtime when `MCP_SERVER_URL` is set
+  (`mcp.Dial` → an MCP-backed `qwen.ToolBox`), falling back to the in-process
+  `tools.Box` when unset or the server is unreachable — the classify loop is
+  unchanged either way (only which `ToolBox` is injected). Run the server with
+  `make mcp` (listens on :8090, tools at `/mcp`). Schemas surfaced over MCP are
+  semantically identical to the in-process definitions (fidelity test).
 - Ingestion: two sources feed the same idempotent `orchestrator.Ingest` (dedupe on
   Message-ID). (1) HTTP `POST /api/emails` (`internal/httpapi`). (2) IMAP poller
   (`internal/ingest/imap`) — a background goroutine watching a mailbox, started by
