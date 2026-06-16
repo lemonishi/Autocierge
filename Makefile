@@ -1,4 +1,4 @@
-.PHONY: dev run test test-db build tidy frontend eval eval-live
+.PHONY: dev run test test-db build tidy frontend eval eval-live mcp
 
 # Auto-load app.env (gitignored) so DATABASE_URL / TEST_DATABASE_URL are set
 # without manual exporting. Override per-invocation by setting the var inline.
@@ -48,3 +48,8 @@ eval:
 
 eval-live:
 	go run ./cmd/eval --live
+
+# Run the MCP tool server locally (Streamable HTTP on :8090, tools at /mcp).
+# The main server connects to it when MCP_SERVER_URL is set (see app.env.example).
+mcp:
+	go run ./cmd/mcp-server
