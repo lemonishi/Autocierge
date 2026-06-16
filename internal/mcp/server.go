@@ -7,6 +7,7 @@ package mcp
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/lemonishi/supportsentinel/internal/qwen"
 	mcpgo "github.com/mark3labs/mcp-go/mcp"
@@ -20,6 +21,7 @@ const serverVersion = "1.0.0"
 // schema is published verbatim (raw schema) so MCP clients see the exact same
 // definitions the in-process ToolBox provides; calls delegate to tb.Invoke.
 func NewServer(tb qwen.ToolBox) *server.MCPServer {
+	// listChanged=false — the tool set is fixed at construction time.
 	s := server.NewMCPServer(serverName, serverVersion, server.WithToolCapabilities(false))
 
 	handler := func(ctx context.Context, req mcpgo.CallToolRequest) (*mcpgo.CallToolResult, error) {
@@ -35,7 +37,10 @@ func NewServer(tb qwen.ToolBox) *server.MCPServer {
 	}
 
 	for _, def := range tb.Definitions() {
-		schema, _ := json.Marshal(def.Parameters)
+		schema, err := json.Marshal(def.Parameters)
+		if err != nil {
+			panic(fmt.Sprintf("mcp: tool %q: parameters not JSON-serialisable: %v", def.Name, err))
+		}
 		tool := mcpgo.NewToolWithRawSchema(def.Name, def.Description, schema)
 		s.AddTool(tool, handler)
 	}
