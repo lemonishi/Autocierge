@@ -1,4 +1,4 @@
-.PHONY: dev run test test-db build tidy frontend eval eval-live mcp
+.PHONY: dev run test test-db build tidy frontend eval eval-live mcp deploy
 
 # Auto-load app.env (gitignored) so DATABASE_URL / TEST_DATABASE_URL are set
 # without manual exporting. Override per-invocation by setting the var inline.
@@ -24,10 +24,11 @@ frontend:
 	cd frontend && npm install && npm run build
 	touch internal/webui/dist/.gitkeep
 
-# Cross-compiles a linux/amd64 binary for Alibaba Cloud ECS deploy (NOT runnable
-# on macOS). For local use, run `make run` instead.
+# Cross-compiles the linux/amd64 binaries (server + mcp-server) for Alibaba Cloud
+# ECS deploy (NOT runnable on macOS). For local use, run `make run` instead.
 build: frontend
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/server ./cmd/server
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/mcp-server ./cmd/mcp-server
 
 # Unit tests + DB-backed tests (DB tests run when TEST_DATABASE_URL is set,
 # which it is via app.env above; otherwise they skip).
@@ -53,3 +54,8 @@ eval-live:
 # The main server connects to it when MCP_SERVER_URL is set (see app.env.example).
 mcp:
 	go run ./cmd/mcp-server
+
+# Deploy to Alibaba Cloud ECS (cross-compile + scp + restart). Requires DEPLOY_HOST.
+# First-time server setup is documented in deploy/README.md.
+deploy:
+	DEPLOY_HOST=$(DEPLOY_HOST) DEPLOY_USER=$(DEPLOY_USER) ./scripts/deploy.sh

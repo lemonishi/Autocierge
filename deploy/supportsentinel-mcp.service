@@ -1,0 +1,18 @@
+[Unit]
+Description=SupportSentinel MCP tool server (localhost only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=supportsentinel
+EnvironmentFile=/etc/supportsentinel/app.env
+ExecStart=/opt/supportsentinel/mcp-server
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
