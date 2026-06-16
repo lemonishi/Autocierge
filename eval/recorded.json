@@ -4,209 +4,209 @@
     "urgency": "normal",
     "type": "billing",
     "department": "billing",
-    "confidence": 0.88
+    "confidence": 0.98
   },
   "g02": {
     "id": "g02",
     "urgency": "normal",
     "type": "billing",
     "department": "billing",
-    "confidence": 0.88
+    "confidence": 0.95
   },
   "g03": {
     "id": "g03",
-    "urgency": "critical",
+    "urgency": "high",
     "type": "billing",
     "department": "billing",
-    "confidence": 0.88
+    "confidence": 0.95
   },
   "g04": {
     "id": "g04",
-    "urgency": "normal",
+    "urgency": "low",
     "type": "billing",
     "department": "billing",
-    "confidence": 0.88
+    "confidence": 0.95
   },
   "g05": {
     "id": "g05",
     "urgency": "normal",
     "type": "billing",
     "department": "billing",
-    "confidence": 0.88
+    "confidence": 0.95
   },
   "g06": {
     "id": "g06",
     "urgency": "critical",
     "type": "technical",
     "department": "engineering",
-    "confidence": 0.86
+    "confidence": 0.98
   },
   "g07": {
     "id": "g07",
-    "urgency": "normal",
-    "type": "general",
-    "department": "support_tier1",
-    "confidence": 0.5
+    "urgency": "high",
+    "type": "technical",
+    "department": "engineering",
+    "confidence": 0.95
   },
   "g08": {
     "id": "g08",
-    "urgency": "normal",
-    "type": "general",
-    "department": "support_tier1",
-    "confidence": 0.5
+    "urgency": "high",
+    "type": "technical",
+    "department": "engineering",
+    "confidence": 0.92
   },
   "g09": {
     "id": "g09",
-    "urgency": "critical",
+    "urgency": "normal",
     "type": "technical",
     "department": "engineering",
-    "confidence": 0.86
+    "confidence": 0.95
   },
   "g10": {
     "id": "g10",
     "urgency": "critical",
     "type": "technical",
     "department": "engineering",
-    "confidence": 0.86
+    "confidence": 0.98
   },
   "g11": {
     "id": "g11",
-    "urgency": "normal",
-    "type": "account",
-    "department": "accounts",
-    "confidence": 0.84
+    "urgency": "high",
+    "type": "technical",
+    "department": "engineering",
+    "confidence": 0.95
   },
   "g12": {
     "id": "g12",
-    "urgency": "normal",
+    "urgency": "low",
     "type": "account",
     "department": "accounts",
-    "confidence": 0.84
+    "confidence": 0.95
   },
   "g13": {
     "id": "g13",
-    "urgency": "normal",
+    "urgency": "high",
     "type": "account",
     "department": "accounts",
-    "confidence": 0.84
+    "confidence": 0.95
   },
   "g14": {
     "id": "g14",
-    "urgency": "normal",
-    "type": "general",
-    "department": "support_tier1",
-    "confidence": 0.5
+    "urgency": "low",
+    "type": "feature_request",
+    "department": "product",
+    "confidence": 0.85
   },
   "g15": {
     "id": "g15",
-    "urgency": "normal",
-    "type": "account",
-    "department": "accounts",
-    "confidence": 0.84
+    "urgency": "high",
+    "type": "technical",
+    "department": "engineering",
+    "confidence": 0.95
   },
   "g16": {
     "id": "g16",
-    "urgency": "normal",
+    "urgency": "low",
     "type": "feature_request",
     "department": "product",
-    "confidence": 0.82
+    "confidence": 0.95
   },
   "g17": {
     "id": "g17",
-    "urgency": "normal",
-    "type": "general",
-    "department": "support_tier1",
-    "confidence": 0.5
+    "urgency": "low",
+    "type": "feature_request",
+    "department": "product",
+    "confidence": 0.95
   },
   "g18": {
     "id": "g18",
-    "urgency": "normal",
-    "type": "general",
-    "department": "support_tier1",
-    "confidence": 0.5
+    "urgency": "low",
+    "type": "feature_request",
+    "department": "product",
+    "confidence": 0.95
   },
   "g19": {
     "id": "g19",
-    "urgency": "normal",
+    "urgency": "low",
     "type": "feature_request",
     "department": "product",
-    "confidence": 0.82
+    "confidence": 0.95
   },
   "g20": {
     "id": "g20",
-    "urgency": "normal",
-    "type": "general",
-    "department": "support_tier1",
-    "confidence": 0.5
+    "urgency": "low",
+    "type": "feature_request",
+    "department": "product",
+    "confidence": 0.95
   },
   "g21": {
     "id": "g21",
-    "urgency": "critical",
-    "type": "technical",
-    "department": "engineering",
-    "confidence": 0.86
+    "urgency": "normal",
+    "type": "general",
+    "department": "support_tier1",
+    "confidence": 0.95
   },
   "g22": {
     "id": "g22",
-    "urgency": "normal",
+    "urgency": "low",
     "type": "general",
     "department": "support_tier1",
-    "confidence": 0.5
+    "confidence": 0.95
   },
   "g23": {
     "id": "g23",
-    "urgency": "normal",
+    "urgency": "low",
     "type": "general",
     "department": "support_tier1",
-    "confidence": 0.5
+    "confidence": 0.95
   },
   "g24": {
     "id": "g24",
-    "urgency": "normal",
+    "urgency": "low",
     "type": "general",
     "department": "support_tier1",
-    "confidence": 0.5
+    "confidence": 0.95
   },
   "g25": {
     "id": "g25",
     "urgency": "normal",
     "type": "billing",
     "department": "billing",
-    "confidence": 0.88
+    "confidence": 0.85
   },
   "g26": {
     "id": "g26",
-    "urgency": "normal",
+    "urgency": "high",
     "type": "technical",
     "department": "engineering",
-    "confidence": 0.86
+    "confidence": 0.85
   },
   "g27": {
     "id": "g27",
     "urgency": "critical",
-    "type": "feature_request",
-    "department": "product",
-    "confidence": 0.82
+    "type": "account",
+    "department": "accounts",
+    "confidence": 0.95
   },
   "g28": {
     "id": "g28",
-    "urgency": "normal",
+    "urgency": "critical",
     "type": "account",
     "department": "accounts",
-    "confidence": 0.84
+    "confidence": 0.95
   },
   "g29": {
     "id": "g29",
-    "urgency": "normal",
+    "urgency": "high",
     "type": "billing",
     "department": "billing",
-    "confidence": 0.88
+    "confidence": 0.95
   },
   "g30": {
     "id": "g30",
-    "urgency": "normal",
+    "urgency": "low",
     "type": "feature_request",
     "department": "product",
-    "confidence": 0.82
+    "confidence": 0.95
   }
 }
