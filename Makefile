@@ -1,4 +1,4 @@
-.PHONY: dev run test test-db build tidy frontend eval eval-live mcp
+.PHONY: dev run test test-db build tidy frontend eval eval-live mcp deploy
 
 # Auto-load app.env (gitignored) so DATABASE_URL / TEST_DATABASE_URL are set
 # without manual exporting. Override per-invocation by setting the var inline.
@@ -54,3 +54,8 @@ eval-live:
 # The main server connects to it when MCP_SERVER_URL is set (see app.env.example).
 mcp:
 	go run ./cmd/mcp-server
+
+# Deploy to Alibaba Cloud ECS (cross-compile + scp + restart). Requires DEPLOY_HOST.
+# First-time server setup is documented in deploy/README.md.
+deploy:
+	DEPLOY_HOST=$(DEPLOY_HOST) DEPLOY_USER=$(DEPLOY_USER) ./scripts/deploy.sh
