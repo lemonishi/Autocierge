@@ -6,7 +6,7 @@ import (
 	"net/smtp"
 	"time"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 // sendFunc matches the signature of smtp.SendMail, allowing injection in tests.

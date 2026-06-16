@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/ingest"
+	"github.com/lemonishi/autocierge/internal/ingest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

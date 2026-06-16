@@ -15,9 +15,9 @@ import (
 	"github.com/emersion/go-imap/v2"
 	"github.com/emersion/go-imap/v2/imapclient"
 
-	"github.com/lemonishi/supportsentinel/internal/config"
-	"github.com/lemonishi/supportsentinel/internal/domain"
-	"github.com/lemonishi/supportsentinel/internal/ingest"
+	"github.com/lemonishi/autocierge/internal/config"
+	"github.com/lemonishi/autocierge/internal/domain"
+	"github.com/lemonishi/autocierge/internal/ingest"
 )
 
 // Ingestor is the seam the poller depends on. The orchestrator satisfies it

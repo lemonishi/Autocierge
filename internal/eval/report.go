@@ -30,7 +30,7 @@ func Render(golds []GoldEmail, preds map[string]Prediction, target float64) stri
 		}
 	}
 
-	fmt.Fprintf(&b, "SupportSentinel — Classification Quality Report\n")
+	fmt.Fprintf(&b, "Autocierge — Classification Quality Report\n")
 	fmt.Fprintf(&b, "Gold examples: %d\n", len(golds))
 	overall := 0.0
 	if len(golds) > 0 {

@@ -3,7 +3,7 @@ package eval_test
 import (
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/eval"
+	"github.com/lemonishi/autocierge/internal/eval"
 	"github.com/stretchr/testify/assert"
 )
 

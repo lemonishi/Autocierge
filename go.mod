@@ -1,4 +1,4 @@
-module github.com/lemonishi/supportsentinel
+module github.com/lemonishi/autocierge
 
 go 1.25.5
 

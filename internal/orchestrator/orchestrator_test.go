@@ -6,10 +6,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/alert"
-	"github.com/lemonishi/supportsentinel/internal/classify"
-	"github.com/lemonishi/supportsentinel/internal/domain"
-	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/autocierge/internal/alert"
+	"github.com/lemonishi/autocierge/internal/classify"
+	"github.com/lemonishi/autocierge/internal/domain"
+	"github.com/lemonishi/autocierge/internal/store"
 	"github.com/stretchr/testify/require"
 )
 

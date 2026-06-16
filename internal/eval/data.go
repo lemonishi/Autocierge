@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 // GoldEmail is one labeled example from eval/gold.jsonl.

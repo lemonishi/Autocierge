@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	dom "github.com/lemonishi/supportsentinel/internal/domain"
-	"github.com/lemonishi/supportsentinel/internal/eval"
+	dom "github.com/lemonishi/autocierge/internal/domain"
+	"github.com/lemonishi/autocierge/internal/eval"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

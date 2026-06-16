@@ -1,4 +1,4 @@
-# SupportSentinel — Plan 3: Tool Layer (DashScope function-calling)
+# Autocierge — Plan 3: Tool Layer (DashScope function-calling)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,7 +8,7 @@
 
 **Tech Stack:** Go 1.25, stdlib `net/http`/`encoding/json`, pgx. DashScope OpenAI-compatible `tools`/`tool_calls`. Offline tests via `httptest` + a fake `ToolBox`; one build-tagged live test.
 
-**Spec:** `docs/superpowers/specs/2026-06-05-supportsentinel-design.md` (§3 tool layer, §4). **Builds on:** Plan 1 (store, `customers` table, orchestrator persists `ToolsUsed`), Plan 2 (qwen client). **Module path:** `github.com/lemonishi/supportsentinel`.
+**Spec:** `docs/superpowers/specs/2026-06-05-autocierge-design.md` (§3 tool layer, §4). **Builds on:** Plan 1 (store, `customers` table, orchestrator persists `ToolsUsed`), Plan 2 (qwen client). **Module path:** `github.com/lemonishi/autocierge`.
 
 **Environment:** Postgres on port 5433 (`TEST_DATABASE_URL` for DB tests). Live tests need `DASHSCOPE_API_KEY` (in gitignored `app.env`). Commit with the repo's existing git config (identity `Lennon <lemoncode8888@gmail.com>`); never override the author email.
 
@@ -48,7 +48,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -106,7 +106,7 @@ func TestFindSimilarTickets(t *testing.T) {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `TEST_DATABASE_URL='postgres://postgres:postgres@localhost:5433/supportsentinel_test?sslmode=disable' go test ./internal/store/ -run 'Customer|Similar' -v`
+Run: `TEST_DATABASE_URL='postgres://postgres:postgres@localhost:5433/autocierge_test?sslmode=disable' go test ./internal/store/ -run 'Customer|Similar' -v`
 Expected: FAIL — undefined `Customer`, `UpsertCustomer`, etc.
 
 - [ ] **Step 3: Implement**
@@ -120,7 +120,7 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 // Customer is a seeded account record used by the lookup_customer tool.
@@ -625,8 +625,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
-	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/autocierge/internal/domain"
+	"github.com/lemonishi/autocierge/internal/store"
 	"github.com/stretchr/testify/require"
 )
 
@@ -724,8 +724,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/lemonishi/supportsentinel/internal/qwen"
-	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/autocierge/internal/qwen"
+	"github.com/lemonishi/autocierge/internal/store"
 )
 
 // Box is a store-backed qwen.ToolBox.
@@ -849,7 +849,7 @@ func (s *Store) SeedDemoCustomers(ctx context.Context) error {
 
 - [ ] **Step 6: Wire into `cmd/server/main.go`**
 
-In the Qwen branch of `cmd/server/main.go`, attach the tools and seed demo customers. Add `"github.com/lemonishi/supportsentinel/internal/tools"` to imports. Change the Qwen construction:
+In the Qwen branch of `cmd/server/main.go`, attach the tools and seed demo customers. Add `"github.com/lemonishi/autocierge/internal/tools"` to imports. Change the Qwen construction:
 ```go
 	if cfg.DashScopeAPIKey != "" {
 		clf = qwen.New(cfg.DashScopeAPIKey, cfg.DashScopeBaseURL, cfg.QwenModel, nil).
@@ -922,7 +922,7 @@ Run:
 ```bash
 go vet ./...
 go build ./...
-TEST_DATABASE_URL='postgres://postgres:postgres@localhost:5433/supportsentinel_test?sslmode=disable' go test ./...
+TEST_DATABASE_URL='postgres://postgres:postgres@localhost:5433/autocierge_test?sslmode=disable' go test ./...
 ```
 Expected: build clean; all tests pass (tools + qwen + store etc.; live tests excluded).
 

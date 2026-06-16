@@ -20,10 +20,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/lemonishi/supportsentinel/internal/classify"
-	"github.com/lemonishi/supportsentinel/internal/domain"
-	"github.com/lemonishi/supportsentinel/internal/eval"
-	"github.com/lemonishi/supportsentinel/internal/qwen"
+	"github.com/lemonishi/autocierge/internal/classify"
+	"github.com/lemonishi/autocierge/internal/domain"
+	"github.com/lemonishi/autocierge/internal/eval"
+	"github.com/lemonishi/autocierge/internal/qwen"
 )
 
 func main() {

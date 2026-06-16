@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 // Slack sends an alert to a Slack incoming webhook.

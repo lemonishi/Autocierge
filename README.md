@@ -1,14 +1,14 @@
-# SupportSentinel
+# Autocierge
 
 > Autopilot support-ticket agent — turns inbound support emails into triaged, routed, and drafted-reply tickets with two human-in-the-loop checkpoints. Built on **Qwen via Alibaba Cloud Model Studio (DashScope)**.
 
 **Hackathon Track 4: Autopilot Agent (QwenCloud / Alibaba Cloud).** Open source under the MIT License.
 
-SupportSentinel ingests support emails (HTTP or IMAP), classifies **urgency** and **type** with Qwen — invoking tools over the **Model Context Protocol** to disambiguate hard cases — routes them through a deterministic state machine, and parks low-confidence or critical tickets for human review. Every reply is human-approved before it would be sent. Every state change is written to an append-only audit log in the same transaction. **It fails toward a human — it never silently drops a ticket.**
+Autocierge ingests support emails (HTTP or IMAP), classifies **urgency** and **type** with Qwen — invoking tools over the **Model Context Protocol** to disambiguate hard cases — routes them through a deterministic state machine, and parks low-confidence or critical tickets for human review. Every reply is human-approved before it would be sent. Every state change is written to an append-only audit log in the same transaction. **It fails toward a human — it never silently drops a ticket.**
 
 ## Why this matters
 
-Support teams drown in inbound email: triage is slow, inconsistent, and the urgent ticket hides among the routine ones. SupportSentinel automates the triage-and-draft loop while keeping a human in control of anything risky — a production-shaped workflow (auditability, resilience, evaluation), not a chatbot demo. It is built to be deployed (single binary + systemd + nginx on Alibaba Cloud ECS, PostgreSQL on RDS) and to be measured (a calibrated evaluation harness, below).
+Support teams drown in inbound email: triage is slow, inconsistent, and the urgent ticket hides among the routine ones. Autocierge automates the triage-and-draft loop while keeping a human in control of anything risky — a production-shaped workflow (auditability, resilience, evaluation), not a chatbot demo. It is built to be deployed (single binary + systemd + nginx on Alibaba Cloud ECS, PostgreSQL on RDS) and to be measured (a calibrated evaluation harness, below).
 
 ## Architecture
 
@@ -21,12 +21,12 @@ flowchart TB
 
     subgraph ECS["Alibaba Cloud ECS (no Docker)"]
         NGINX["nginx<br/>(TLS, reverse proxy)"]
-        subgraph SERVER["supportsentinel.service :8080"]
+        subgraph SERVER["autocierge.service :8080"]
             ORCH["Orchestrator<br/>deterministic state machine"]
             QWEN["Qwen client<br/>(DashScope, JSON-mode + retry)"]
             UI["Embedded React dashboard"]
         end
-        MCP["supportsentinel-mcp.service :8090<br/>MCP tool server (lookup_customer,<br/>lookup_similar_tickets)"]
+        MCP["autocierge-mcp.service :8090<br/>MCP tool server (lookup_customer,<br/>lookup_similar_tickets)"]
     end
 
     ALI["Alibaba Cloud Model Studio<br/>(Qwen / DashScope)"]

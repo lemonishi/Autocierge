@@ -1,4 +1,4 @@
-# SupportSentinel — Plan 1: Foundation & Core Vertical Slice
+# Autocierge — Plan 1: Foundation & Core Vertical Slice
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,9 +8,9 @@
 
 **Tech Stack:** Go 1.22+, jackc/pgx v5 (pgxpool), google/uuid, stretchr/testify, net/http ServeMux. PostgreSQL (local for tests via `TEST_DATABASE_URL`; Alibaba Cloud RDS in prod). No Docker.
 
-**Spec:** `docs/superpowers/specs/2026-06-05-supportsentinel-design.md`
+**Spec:** `docs/superpowers/specs/2026-06-05-autocierge-design.md`
 
-**Module path:** `github.com/lemonishi/supportsentinel`.
+**Module path:** `github.com/lemonishi/autocierge`.
 
 ---
 
@@ -51,7 +51,7 @@ internal/httpapi/server_test.go  → end-to-end vertical slice test
 
 Run:
 ```bash
-go mod init github.com/lemonishi/supportsentinel
+go mod init github.com/lemonishi/autocierge
 go get github.com/jackc/pgx/v5@latest
 go get github.com/google/uuid@latest
 go get github.com/stretchr/testify@latest
@@ -63,7 +63,7 @@ Expected: `go.mod` created listing the three deps; `go.sum` populated.
 ```text
 MIT License
 
-Copyright (c) 2026 SupportSentinel
+Copyright (c) 2026 Autocierge
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -93,9 +93,9 @@ PORT=8080
 CONFIDENCE_THRESHOLD=0.75
 # PostgreSQL connection (local dev = Homebrew postgresql@16 on port 5433; prod = Alibaba Cloud RDS).
 # Port 5433 because 5432 is held by another app's Docker Postgres on this machine.
-DATABASE_URL=postgres://postgres:postgres@localhost:5433/supportsentinel?sslmode=disable
+DATABASE_URL=postgres://postgres:postgres@localhost:5433/autocierge?sslmode=disable
 # Tests use a separate database; leave unset to SKIP DB-backed tests.
-TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5433/supportsentinel_test?sslmode=disable
+TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5433/autocierge_test?sslmode=disable
 # Qwen / DashScope (added in Plan 2)
 # DASHSCOPE_API_KEY=
 ```
@@ -128,17 +128,17 @@ test:
 
 # Convenience: create the local dev + test databases on the Homebrew instance (port 5433).
 test-db:
-	/opt/homebrew/opt/postgresql@16/bin/createdb -h localhost -p 5433 -O postgres supportsentinel || true
-	/opt/homebrew/opt/postgresql@16/bin/createdb -h localhost -p 5433 -O postgres supportsentinel_test || true
+	/opt/homebrew/opt/postgresql@16/bin/createdb -h localhost -p 5433 -O postgres autocierge || true
+	/opt/homebrew/opt/postgresql@16/bin/createdb -h localhost -p 5433 -O postgres autocierge_test || true
 ```
 
 - [ ] **Step 5: Create seeded `CLAUDE.md`**
 
 ```markdown
-# SupportSentinel — Project Memory
+# Autocierge — Project Memory
 
 Autopilot support-ticket agent. Hackathon Track 4 (QwenCloud / Alibaba Cloud).
-Full design: `docs/superpowers/specs/2026-06-05-supportsentinel-design.md`.
+Full design: `docs/superpowers/specs/2026-06-05-autocierge-design.md`.
 Plans: `docs/superpowers/plans/`.
 
 ## Stack
@@ -579,7 +579,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -701,7 +701,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 //go:embed schema.sql
@@ -978,7 +978,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1030,7 +1030,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 type Fake struct{}
@@ -1117,7 +1117,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1147,7 +1147,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 type Alerter interface {
@@ -1208,10 +1208,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/alert"
-	"github.com/lemonishi/supportsentinel/internal/classify"
-	"github.com/lemonishi/supportsentinel/internal/domain"
-	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/autocierge/internal/alert"
+	"github.com/lemonishi/autocierge/internal/classify"
+	"github.com/lemonishi/autocierge/internal/domain"
+	"github.com/lemonishi/autocierge/internal/store"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1303,9 +1303,9 @@ import (
 	"log"
 
 	"github.com/google/uuid"
-	"github.com/lemonishi/supportsentinel/internal/alert"
-	"github.com/lemonishi/supportsentinel/internal/domain"
-	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/autocierge/internal/alert"
+	"github.com/lemonishi/autocierge/internal/domain"
+	"github.com/lemonishi/autocierge/internal/store"
 )
 
 type Orchestrator struct {
@@ -1648,10 +1648,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/alert"
-	"github.com/lemonishi/supportsentinel/internal/classify"
-	"github.com/lemonishi/supportsentinel/internal/orchestrator"
-	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/autocierge/internal/alert"
+	"github.com/lemonishi/autocierge/internal/classify"
+	"github.com/lemonishi/autocierge/internal/orchestrator"
+	"github.com/lemonishi/autocierge/internal/store"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1743,9 +1743,9 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/lemonishi/supportsentinel/internal/domain"
-	"github.com/lemonishi/supportsentinel/internal/orchestrator"
-	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/autocierge/internal/domain"
+	"github.com/lemonishi/autocierge/internal/orchestrator"
+	"github.com/lemonishi/autocierge/internal/store"
 )
 
 func NewServer(o *orchestrator.Orchestrator, s *store.Store) http.Handler {
@@ -1903,12 +1903,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/lemonishi/supportsentinel/internal/alert"
-	"github.com/lemonishi/supportsentinel/internal/classify"
-	"github.com/lemonishi/supportsentinel/internal/config"
-	"github.com/lemonishi/supportsentinel/internal/httpapi"
-	"github.com/lemonishi/supportsentinel/internal/orchestrator"
-	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/autocierge/internal/alert"
+	"github.com/lemonishi/autocierge/internal/classify"
+	"github.com/lemonishi/autocierge/internal/config"
+	"github.com/lemonishi/autocierge/internal/httpapi"
+	"github.com/lemonishi/autocierge/internal/orchestrator"
+	"github.com/lemonishi/autocierge/internal/store"
 )
 
 func main() {
@@ -1927,7 +1927,7 @@ func main() {
 	o := orchestrator.New(s, classify.NewFake(), alert.NewLog(), cfg.ConfidenceThreshold)
 	srv := httpapi.NewServer(o, s)
 
-	log.Printf("SupportSentinel listening on :%s", cfg.Port)
+	log.Printf("Autocierge listening on :%s", cfg.Port)
 	if err := http.ListenAndServe(":"+cfg.Port, srv); err != nil {
 		log.Fatal(err)
 	}

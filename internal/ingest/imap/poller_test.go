@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lemonishi/supportsentinel/internal/config"
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/config"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 // fakeIngestor is a compile-time and runtime check that an Ingestor can be

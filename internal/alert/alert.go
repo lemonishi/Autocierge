@@ -6,7 +6,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 type Alerter interface {

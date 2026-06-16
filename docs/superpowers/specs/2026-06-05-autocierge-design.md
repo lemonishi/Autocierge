@@ -1,4 +1,4 @@
-# SupportSentinel — Design Spec
+# Autocierge — Design Spec
 
 **Hackathon track:** Track 4 — Autopilot Agent (QwenCloud / Alibaba Cloud)
 **Date:** 2026-06-05
@@ -6,7 +6,7 @@
 
 ## 1. Summary
 
-SupportSentinel is an autopilot agent that turns inbound support emails into
+Autocierge is an autopilot agent that turns inbound support emails into
 triaged, routed, and answered tickets end-to-end. It classifies each email's
 **urgency** and **type**, routes it to the right department, drafts a reply, and
 inserts **human-in-the-loop checkpoints** at the two critical decision points
@@ -210,11 +210,11 @@ Principle: **fail toward a human, never silently drop.**
   cross-compiled single Go binary (`GOOS=linux GOARCH=amd64`).
 - **ECS:** `systemd` service (auto-restart, start-on-boot, `journalctl` logs);
   `nginx` reverse proxy terminates TLS (Let's Encrypt/certbot) → `localhost:8080`.
-- **Secrets:** `EnvironmentFile=/etc/supportsentinel/app.env` (Qwen key, RDS
+- **Secrets:** `EnvironmentFile=/etc/autocierge/app.env` (Qwen key, RDS
   `DATABASE_URL`, IMAP creds).
 - **Database:** Alibaba Cloud managed RDS PostgreSQL.
 - **Deploy flow (`make deploy`):** build frontend → embed → cross-compile → scp →
-  `systemctl restart supportsentinel`. Optional GitHub Action on push to `main`.
+  `systemctl restart autocierge`. Optional GitHub Action on push to `main`.
 - **Local dev (`make dev`):** run binary against a local/dev Postgres
   (`DATABASE_URL` documented in `app.env.example`).
 

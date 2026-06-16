@@ -39,7 +39,7 @@ export default function App() {
   return (
     <div className="flex h-screen flex-col bg-gray-50 text-gray-900">
       <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3">
-        <h1 className="text-lg font-bold">SupportSentinel <span className="text-gray-400">reviewer console</span></h1>
+        <h1 className="text-lg font-bold">Autocierge <span className="text-gray-400">reviewer console</span></h1>
         {error && <span className="text-sm text-red-600">{error}</span>}
       </header>
       <div className="flex min-h-0 flex-1">

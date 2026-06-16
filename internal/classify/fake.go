@@ -7,7 +7,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/lemonishi/supportsentinel/internal/domain"
+	"github.com/lemonishi/autocierge/internal/domain"
 )
 
 var _ domain.Classifier = (*Fake)(nil)

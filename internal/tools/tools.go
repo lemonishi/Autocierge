@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/lemonishi/supportsentinel/internal/qwen"
-	"github.com/lemonishi/supportsentinel/internal/store"
+	"github.com/lemonishi/autocierge/internal/qwen"
+	"github.com/lemonishi/autocierge/internal/store"
 )
 
 // Box is a store-backed qwen.ToolBox.

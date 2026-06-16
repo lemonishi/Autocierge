@@ -1,4 +1,4 @@
-// Command mcp-server serves SupportSentinel's agent tools (lookup_customer,
+// Command mcp-server serves Autocierge's agent tools (lookup_customer,
 // lookup_similar_tickets) over the Model Context Protocol (Streamable HTTP).
 // The main server's MCP-backed ToolBox connects to it; run it via `make mcp`.
 //
@@ -11,10 +11,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/lemonishi/supportsentinel/internal/config"
-	"github.com/lemonishi/supportsentinel/internal/mcp"
-	"github.com/lemonishi/supportsentinel/internal/store"
-	"github.com/lemonishi/supportsentinel/internal/tools"
+	"github.com/lemonishi/autocierge/internal/config"
+	"github.com/lemonishi/autocierge/internal/mcp"
+	"github.com/lemonishi/autocierge/internal/store"
+	"github.com/lemonishi/autocierge/internal/tools"
 	mcpserver "github.com/mark3labs/mcp-go/server"
 )
 

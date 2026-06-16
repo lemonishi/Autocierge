@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/lemonishi/supportsentinel/internal/mcp"
-	"github.com/lemonishi/supportsentinel/internal/qwen"
+	"github.com/lemonishi/autocierge/internal/mcp"
+	"github.com/lemonishi/autocierge/internal/qwen"
 	mcpclient "github.com/mark3labs/mcp-go/client"
 	mcpgo "github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/assert"

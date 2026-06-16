@@ -1,0 +1,19 @@
+[Unit]
+Description=Autocierge API + dashboard
+After=network-online.target autocierge-mcp.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=autocierge
+EnvironmentFile=/etc/autocierge/app.env
+ExecStart=/opt/autocierge/server
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/autocierge
+
+[Install]
+WantedBy=multi-user.target

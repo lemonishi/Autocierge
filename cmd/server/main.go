@@ -6,17 +6,17 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lemonishi/supportsentinel/internal/alert"
-	"github.com/lemonishi/supportsentinel/internal/classify"
-	"github.com/lemonishi/supportsentinel/internal/config"
-	"github.com/lemonishi/supportsentinel/internal/domain"
-	"github.com/lemonishi/supportsentinel/internal/httpapi"
-	"github.com/lemonishi/supportsentinel/internal/ingest/imap"
-	"github.com/lemonishi/supportsentinel/internal/mcp"
-	"github.com/lemonishi/supportsentinel/internal/orchestrator"
-	"github.com/lemonishi/supportsentinel/internal/qwen"
-	"github.com/lemonishi/supportsentinel/internal/store"
-	"github.com/lemonishi/supportsentinel/internal/tools"
+	"github.com/lemonishi/autocierge/internal/alert"
+	"github.com/lemonishi/autocierge/internal/classify"
+	"github.com/lemonishi/autocierge/internal/config"
+	"github.com/lemonishi/autocierge/internal/domain"
+	"github.com/lemonishi/autocierge/internal/httpapi"
+	"github.com/lemonishi/autocierge/internal/ingest/imap"
+	"github.com/lemonishi/autocierge/internal/mcp"
+	"github.com/lemonishi/autocierge/internal/orchestrator"
+	"github.com/lemonishi/autocierge/internal/qwen"
+	"github.com/lemonishi/autocierge/internal/store"
+	"github.com/lemonishi/autocierge/internal/tools"
 )
 
 func main() {
@@ -70,7 +70,7 @@ func main() {
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
-	log.Printf("SupportSentinel listening on :%s", cfg.Port)
+	log.Printf("Autocierge listening on :%s", cfg.Port)
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
