@@ -3,7 +3,6 @@ package mcp
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/lemonishi/supportsentinel/internal/qwen"
@@ -55,7 +54,12 @@ func Dial(ctx context.Context, url string) (*ToolBox, error) {
 	if err := c.Start(ctx); err != nil {
 		return nil, fmt.Errorf("mcp: start %s: %w", url, err)
 	}
-	return NewToolBox(ctx, c)
+	tb, err := NewToolBox(ctx, c)
+	if err != nil {
+		_ = c.Close() // Dial owns the connection; don't leak it on init failure.
+		return nil, err
+	}
+	return tb, nil
 }
 
 func (t *ToolBox) Definitions() []qwen.ToolDefinition { return t.defs }
@@ -77,15 +81,18 @@ func (t *ToolBox) Invoke(ctx context.Context, name, argsJSON string) (string, er
 	}
 	text := firstText(res)
 	if res.IsError {
-		return "", errors.New(text)
+		return "", fmt.Errorf("mcp: call %q: tool error: %s", name, text)
 	}
 	return text, nil
 }
 
 // schemaToMap reconstructs a tool's JSON-schema parameters as a map. It prefers
 // the raw schema when present, else marshals the structured InputSchema.
-// NOTE: RawInputSchema has json:"-" so it is never populated from network responses;
-// after ListTools the schema lives in InputSchema. Both paths are handled for safety.
+//
+// Note: mcp-go's structured schema always emits "required": [] (never omits it),
+// so a tool whose Parameters omit "required" will round-trip with an empty
+// "required" array. Our tools all declare "required", so fidelity holds; keep
+// this in mind if a future tool has no required fields.
 func schemaToMap(tl mcpgo.Tool) (map[string]any, error) {
 	var raw []byte
 	if len(tl.RawInputSchema) > 0 {
