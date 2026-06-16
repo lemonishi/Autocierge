@@ -31,6 +31,11 @@ type Config struct {
 	SMTPFrom        string
 	SMTPTo          string // escalation/ops address; defaults to SMTPFrom if unset
 	SlackWebhookURL string
+
+	// MCP tool server (optional). When set, the classifier sources its tools
+	// over MCP from this URL (e.g. http://127.0.0.1:8090/mcp); otherwise it uses
+	// the in-process tool implementations.
+	MCPServerURL string
 }
 
 func Load() (Config, error) {
@@ -78,6 +83,7 @@ func Load() (Config, error) {
 	c.SMTPFrom = os.Getenv("SMTP_FROM")
 	c.SMTPTo = os.Getenv("SMTP_TO")
 	c.SlackWebhookURL = os.Getenv("SLACK_WEBHOOK_URL")
+	c.MCPServerURL = os.Getenv("MCP_SERVER_URL")
 
 	return c, nil
 }

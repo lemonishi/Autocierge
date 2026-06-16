@@ -198,3 +198,27 @@ func TestIMAPPollSecondsRejectsNonPositive(t *testing.T) {
 		}
 	}
 }
+
+func TestMCPServerURL(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("MCP_SERVER_URL", "http://127.0.0.1:8090/mcp")
+	c, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if c.MCPServerURL != "http://127.0.0.1:8090/mcp" {
+		t.Errorf("MCPServerURL = %q", c.MCPServerURL)
+	}
+}
+
+func TestMCPServerURLDefaultsEmpty(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("MCP_SERVER_URL", "")
+	c, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if c.MCPServerURL != "" {
+		t.Errorf("MCPServerURL = %q, want empty when unset", c.MCPServerURL)
+	}
+}

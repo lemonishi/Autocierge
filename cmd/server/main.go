@@ -12,6 +12,7 @@ import (
 	"github.com/lemonishi/supportsentinel/internal/domain"
 	"github.com/lemonishi/supportsentinel/internal/httpapi"
 	"github.com/lemonishi/supportsentinel/internal/ingest/imap"
+	"github.com/lemonishi/supportsentinel/internal/mcp"
 	"github.com/lemonishi/supportsentinel/internal/orchestrator"
 	"github.com/lemonishi/supportsentinel/internal/qwen"
 	"github.com/lemonishi/supportsentinel/internal/store"
@@ -32,12 +33,22 @@ func main() {
 
 	var clf domain.Classifier
 	if cfg.DashScopeAPIKey != "" {
-		clf = qwen.New(cfg.DashScopeAPIKey, cfg.DashScopeBaseURL, cfg.QwenModel, nil).
-			WithTools(tools.New(s))
 		if err := s.SeedDemoCustomers(ctx); err != nil {
 			log.Printf("seed demo customers: %v", err)
 		}
-		log.Printf("classifier: Qwen via DashScope (model=%s) with tools", cfg.QwenModel)
+		var toolBox qwen.ToolBox = tools.New(s)
+		source := "in-process"
+		if cfg.MCPServerURL != "" {
+			if mtb, err := mcp.Dial(ctx, cfg.MCPServerURL); err != nil {
+				log.Printf("mcp: dial %s failed (%v); falling back to in-process tools", cfg.MCPServerURL, err)
+			} else {
+				toolBox = mtb
+				source = "MCP " + cfg.MCPServerURL
+			}
+		}
+		clf = qwen.New(cfg.DashScopeAPIKey, cfg.DashScopeBaseURL, cfg.QwenModel, nil).
+			WithTools(toolBox)
+		log.Printf("classifier: Qwen via DashScope (model=%s) with tools (%s)", cfg.QwenModel, source)
 	} else {
 		clf = classify.NewFake()
 		log.Printf("classifier: fake (DASHSCOPE_API_KEY not set)")
