@@ -69,3 +69,52 @@ func TestServerListsTools(t *testing.T) {
 	}
 	assert.True(t, names["lookup_customer"], "server should expose lookup_customer")
 }
+
+func TestToolBoxDefinitionsFidelity(t *testing.T) {
+	c := inProcessClient(t)
+	tb, err := mcp.NewToolBox(context.Background(), c)
+	require.NoError(t, err)
+
+	got := tb.Definitions()
+	want := stubBox{}.Definitions()
+	require.Len(t, got, len(want))
+
+	byName := map[string]qwen.ToolDefinition{}
+	for _, d := range got {
+		byName[d.Name] = d
+	}
+	for _, w := range want {
+		g, ok := byName[w.Name]
+		require.True(t, ok, "missing tool %s over MCP", w.Name)
+		assert.Equal(t, w.Description, g.Description)
+		// Schemas must be semantically identical (key order / []string vs []any ignored).
+		assert.JSONEq(t, mustJSON(w.Parameters), mustJSON(g.Parameters))
+	}
+}
+
+func TestToolBoxInvokeRoundTrip(t *testing.T) {
+	c := inProcessClient(t)
+	tb, err := mcp.NewToolBox(context.Background(), c)
+	require.NoError(t, err)
+
+	out, err := tb.Invoke(context.Background(), "lookup_customer", `{"email":"a@b.com"}`)
+	require.NoError(t, err)
+	assert.JSONEq(t, `{"found":true,"email":"a@b.com"}`, out)
+}
+
+func TestToolBoxInvokeToolError(t *testing.T) {
+	c := inProcessClient(t)
+	tb, err := mcp.NewToolBox(context.Background(), c)
+	require.NoError(t, err)
+
+	_, err = tb.Invoke(context.Background(), "does_not_exist", `{}`)
+	require.Error(t, err) // unknown tool surfaces as an error, mirroring the in-process Box
+}
+
+func mustJSON(v any) string {
+	b, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
+}
