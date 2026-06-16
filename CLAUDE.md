@@ -49,7 +49,12 @@ Plans: `docs/superpowers/plans/`.
   served at `/` by the Go binary (`internal/webui`). Read endpoints: `GET /api/tickets`,
   `/api/tickets/{id}/detail`, `/api/tickets/{id}/audit`. Dev: `cd frontend && npm run dev`
   (proxies /api → :8080). Build: `make frontend` then `go build`.
-- Deploy: NO Docker. Single Go binary + systemd + nginx on Alibaba Cloud ECS (Plan 7).
+- Deploy: NO Docker. Two cross-compiled binaries (`server` + `mcp-server`) as systemd
+  units + nginx (self-signed TLS over the public IP) on Alibaba Cloud ECS; PostgreSQL
+  on Alibaba Cloud RDS (schema auto-applied). Artifacts + one-time runbook in `deploy/`;
+  re-deploy with `DEPLOY_HOST=<ip> DEPLOY_USER=<user> make deploy`. Submission deliverables
+  (Track 4 map, demo + proof scripts) in `docs/SUBMISSION.md`; overview + diagrams in
+  `README.md` / `docs/architecture.md`.
 
 ## Fixed taxonomies (hard contract — see internal/domain)
 - Urgency: low | normal | high | critical
