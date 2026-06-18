@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { TicketDetail as Detail, AuditEntry } from "../types";
 import { Badge } from "../ui";
 import { AuditTimeline } from "./AuditTimeline";
@@ -21,6 +21,13 @@ export function TicketDetail({
   const [department, setDepartment] = useState<string>(c?.department ?? "support_tier1");
   const [replyText, setReplyText] = useState(detail.reply?.draft_text ?? "");
   const [busy, setBusy] = useState(false);
+
+  // The draft is generated server-side and arrives on a later refetch of the
+  // SAME ticket (Checkpoint 1 → 2), so the useState initializer above misses it
+  // (no remount). Re-seed the textarea whenever the draft text changes; the
+  // dependency means in-progress edits aren't clobbered by unchanged refetches.
+  const draftText = detail.reply?.draft_text ?? "";
+  useEffect(() => { setReplyText(draftText); }, [draftText]);
 
   const state = detail.ticket.state;
   const wrap = (fn: () => Promise<void>) => async () => {
