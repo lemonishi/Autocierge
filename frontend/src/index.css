@@ -1,1 +1,87 @@
+/* Font faces (self-hosted via @fontsource — works offline on the embedded deploy). */
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+
 @import "tailwindcss";
+
+/* Make `dark:` utilities respond to our data-theme attribute (not OS media). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Light theme (default). */
+:root {
+  --canvas: #f7f8fa;
+  --panel: #ffffff;
+  --raised: #ffffff;
+  --line: #e2e8f0;
+  --ink: #0f172a;
+  --muted: #475569;
+  --faint: #5b6b80;
+  --accent: #0ea5e9;
+  --accent-hover: #0284c7;
+  --accent-text: #0369a1;
+  --on-accent: #0b1220;
+  --critical: #b91c1c;  --critical-soft: #fee2e2;
+  --high: #c2410c;      --high-soft: #ffedd5;
+  --normal: #1d4ed8;    --normal-soft: #dbeafe;
+  --low: #475569;       --low-soft: #f1f5f9;
+  --resolved: #047857;  --resolved-soft: #d1fae5;
+}
+
+/* Dark theme. */
+[data-theme="dark"] {
+  --canvas: #0b0e14;
+  --panel: #12161f;
+  --raised: #161b26;
+  --line: #222838;
+  --ink: #e6e9ef;
+  --muted: #9ba3b4;
+  --faint: #8b93a4;
+  --accent: #38bdf8;
+  --accent-hover: #0ea5e9;
+  --accent-text: #38bdf8;
+  --critical: #f87171;  --critical-soft: #2a1416;
+  --high: #fb923c;      --high-soft: #2a1e12;
+  --normal: #60a5fa;    --normal-soft: #12203a;
+  --low: #94a3b8;       --low-soft: #1a1f2b;
+  --resolved: #34d399;  --resolved-soft: #0e2620;
+}
+
+/* Map raw variables into Tailwind tokens (inline => utilities reference the
+   var, so they switch with data-theme at runtime). */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-text: var(--accent-text);
+  --color-on-accent: var(--on-accent);
+  --color-critical: var(--critical);
+  --color-critical-soft: var(--critical-soft);
+  --color-high: var(--high);
+  --color-high-soft: var(--high-soft);
+  --color-normal: var(--normal);
+  --color-normal-soft: var(--normal-soft);
+  --color-low: var(--low);
+  --color-low-soft: var(--low-soft);
+  --color-resolved: var(--resolved);
+  --color-resolved-soft: var(--resolved-soft);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+html, body, #root { height: 100%; }
+body {
+  background-color: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
