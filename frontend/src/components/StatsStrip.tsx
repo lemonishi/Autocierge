@@ -23,7 +23,12 @@ export function StatsStrip({ stats }: { stats: QueueStats }) {
       <Stat label="awaiting reply" value={stats.awaitingApproval} />
       <Stat label="resolved" value={stats.resolved} />
       {total > 0 && (
-        <div className="flex h-1.5 w-28 overflow-hidden rounded-full bg-line" title="Urgency mix">
+        <div
+          className="flex h-1.5 w-28 overflow-hidden rounded-full bg-line"
+          title="Urgency mix"
+          role="img"
+          aria-label={`Urgency mix: ${mix.critical} critical, ${mix.high} high, ${mix.normal} normal, ${mix.low} low`}
+        >
           {(["critical", "high", "normal", "low"] as const).map((k) =>
             mix[k] > 0 ? (
               <div key={k} className={URGENCY_COLOR[k]} style={{ width: `${(mix[k] / total) * 100}%` }} />

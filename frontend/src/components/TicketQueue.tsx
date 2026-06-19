@@ -20,10 +20,11 @@ export function TicketQueue({
           <button
             key={t.id}
             onClick={() => onSelect(t.id)}
+            aria-current={active ? "true" : undefined}
             className={`relative w-full border-b border-line px-4 py-3 text-left transition
               ${active ? "bg-raised" : "hover:bg-raised/60"}`}
           >
-            <span className={`absolute inset-y-0 left-0 w-0.5 ${active ? "bg-accent" : urgencyBar[t.urgency] ?? "bg-line"}`} />
+            <span className={`absolute inset-y-0 left-0 w-1 ${active ? "bg-accent" : urgencyBar[t.urgency] ?? "bg-line"}`} />
             <div className="flex items-center justify-between gap-2">
               <span className="truncate font-medium text-ink">{t.subject || "(no subject)"}</span>
               <Badge kind="urgency" value={t.urgency} />
