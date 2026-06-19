@@ -21,14 +21,14 @@ const stateLabel: Record<string, string> = {
 };
 
 const stateIcon: Record<string, JSX.Element> = {
-  AWAITING_CLASSIFICATION_REVIEW: <AlertTriangle size={12} />,
-  AWAITING_REPLY_APPROVAL: <PenLine size={12} />,
-  RESOLVED: <CheckCircle2 size={12} />,
-  ROUTED: <Circle size={12} />,
-  CLASSIFYING: <Loader2 size={12} />,
-  DRAFTING: <Loader2 size={12} />,
-  NEW: <Inbox size={12} />,
-  FAILED: <XCircle size={12} />,
+  AWAITING_CLASSIFICATION_REVIEW: <AlertTriangle aria-hidden size={12} />,
+  AWAITING_REPLY_APPROVAL: <PenLine aria-hidden size={12} />,
+  RESOLVED: <CheckCircle2 aria-hidden size={12} />,
+  ROUTED: <Circle aria-hidden size={12} />,
+  CLASSIFYING: <Loader2 aria-hidden size={12} />,
+  DRAFTING: <Loader2 aria-hidden size={12} />,
+  NEW: <Inbox aria-hidden size={12} />,
+  FAILED: <XCircle aria-hidden size={12} />,
 };
 
 export function Badge({ kind, value }: { kind: "urgency" | "state"; value: string }) {
@@ -42,7 +42,7 @@ export function Badge({ kind, value }: { kind: "urgency" | "state"; value: strin
   const needsAction = value === "AWAITING_CLASSIFICATION_REVIEW" || value === "AWAITING_REPLY_APPROVAL";
   const resolved = value === "RESOLVED";
   const tone = needsAction
-    ? "bg-accent/10 text-accent"
+    ? "bg-accent/10 text-accent-text"
     : resolved
       ? "bg-resolved-soft text-resolved"
       : "bg-low-soft text-muted";

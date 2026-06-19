@@ -66,7 +66,7 @@ export function TicketDetail({
             <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
               <span className="text-faint">Tools:</span>
               {Object.keys(c.tools_used).map((name) => (
-                <span key={name} className="rounded bg-accent/10 px-1.5 py-0.5 font-mono text-accent">{name}</span>
+                <span key={name} className="rounded bg-accent/10 px-1.5 py-0.5 font-mono text-accent-text">{name}</span>
               ))}
             </div>
           )}
@@ -84,7 +84,7 @@ export function TicketDetail({
           <button
             disabled={busy}
             onClick={wrap(() => onReviewClassification({ urgency, type, department }))}
-            className="mt-3 rounded-md bg-accent px-4 py-2 font-medium text-white transition hover:bg-accent-hover disabled:opacity-50"
+            className="mt-3 rounded-md bg-accent px-4 py-2 font-medium text-on-accent transition hover:bg-accent-hover disabled:opacity-50"
           >
             Confirm &amp; route
           </button>
@@ -95,6 +95,7 @@ export function TicketDetail({
         <section className="rounded-lg border border-accent bg-accent/5 p-4 shadow-[0_0_0_1px_var(--accent)]">
           <h3 className="mb-2 font-semibold text-ink">Checkpoint 2 — Approve reply</h3>
           <textarea
+            aria-label="Reply draft"
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             rows={8}
@@ -104,7 +105,7 @@ export function TicketDetail({
             <button
               disabled={busy}
               onClick={wrap(() => onReplyApproval({ action: "approve", final_text: replyText }))}
-              className="rounded-md bg-resolved px-4 py-2 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+              className="rounded-md bg-resolved px-4 py-2 font-medium text-on-accent transition hover:opacity-90 disabled:opacity-50"
             >
               Approve &amp; send
             </button>
