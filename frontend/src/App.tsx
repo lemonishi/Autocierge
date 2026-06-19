@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "./api";
 import type { AuditEntry, TicketDetail as Detail, TicketSummary } from "./types";
 import { TicketQueue } from "./components/TicketQueue";
 import { TicketDetail } from "./components/TicketDetail";
+import { StatsStrip } from "./components/StatsStrip";
+import { ThemeToggle } from "./components/ThemeToggle";
+import { deriveStats } from "./stats";
 
 const REVIEWER = "demo-agent";
 
@@ -12,6 +15,7 @@ export default function App() {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const stats = useMemo(() => deriveStats(tickets), [tickets]);
 
   const refreshQueue = useCallback(async () => {
     try { setTickets(await api.listTickets()); } catch (e) { setError(String(e)); }
@@ -37,13 +41,22 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-gray-50 text-gray-900">
-      <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3">
-        <h1 className="text-lg font-bold">Autocierge <span className="text-gray-400">reviewer console</span></h1>
-        {error && <span className="text-sm text-red-600">{error}</span>}
+    <div className="flex h-screen flex-col bg-canvas text-ink">
+      <header className="flex items-center justify-between border-b border-line bg-panel px-6 py-3">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <span className="grid h-6 w-6 place-items-center rounded-md bg-accent font-bold text-white">A</span>
+            <h1 className="text-base font-semibold text-ink">Autocierge</h1>
+          </div>
+          <StatsStrip stats={stats} />
+        </div>
+        <div className="flex items-center gap-3">
+          {error && <span className="text-sm text-critical">{error}</span>}
+          <ThemeToggle />
+        </div>
       </header>
       <div className="flex min-h-0 flex-1">
-        <aside className="w-96 shrink-0 overflow-y-auto border-r border-gray-200 bg-white">
+        <aside className="w-96 shrink-0 overflow-y-auto border-r border-line bg-panel">
           <TicketQueue tickets={tickets} selectedId={selectedId} onSelect={setSelectedId} />
         </aside>
         <main className="min-w-0 flex-1 overflow-y-auto p-6">
@@ -62,7 +75,7 @@ export default function App() {
               }}
             />
           ) : (
-            <div className="grid h-full place-items-center text-gray-400">Select a ticket from the queue</div>
+            <div className="grid h-full place-items-center text-faint">Select a ticket from the queue</div>
           )}
         </main>
       </div>
