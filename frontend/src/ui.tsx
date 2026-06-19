@@ -1,9 +1,12 @@
-const urgencyColor: Record<string, string> = {
-  critical: "bg-red-100 text-red-800 border-red-300",
-  high: "bg-orange-100 text-orange-800 border-orange-300",
-  normal: "bg-blue-100 text-blue-800 border-blue-300",
-  low: "bg-gray-100 text-gray-700 border-gray-300",
-  "": "bg-gray-100 text-gray-500 border-gray-300",
+import { AlertTriangle, CheckCircle2, Circle, Clock, Inbox, Loader2, PenLine, XCircle } from "lucide-react";
+import type { JSX } from "react";
+
+const urgencyClass: Record<string, string> = {
+  critical: "bg-critical-soft text-critical border-critical/30",
+  high: "bg-high-soft text-high border-high/30",
+  normal: "bg-normal-soft text-normal border-normal/30",
+  low: "bg-low-soft text-low border-low/30",
+  "": "bg-low-soft text-faint border-line",
 };
 
 const stateLabel: Record<string, string> = {
@@ -17,17 +20,35 @@ const stateLabel: Record<string, string> = {
   FAILED: "Failed",
 };
 
+const stateIcon: Record<string, JSX.Element> = {
+  AWAITING_CLASSIFICATION_REVIEW: <AlertTriangle size={12} />,
+  AWAITING_REPLY_APPROVAL: <PenLine size={12} />,
+  RESOLVED: <CheckCircle2 size={12} />,
+  ROUTED: <Circle size={12} />,
+  CLASSIFYING: <Loader2 size={12} />,
+  DRAFTING: <Loader2 size={12} />,
+  NEW: <Inbox size={12} />,
+  FAILED: <XCircle size={12} />,
+};
+
 export function Badge({ kind, value }: { kind: "urgency" | "state"; value: string }) {
   if (kind === "urgency") {
     return (
-      <span className={`inline-block rounded-full border px-2 py-0.5 text-xs font-medium ${urgencyColor[value] ?? urgencyColor[""]}`}>
+      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${urgencyClass[value] ?? urgencyClass[""]}`}>
         {value || "—"}
       </span>
     );
   }
   const needsAction = value === "AWAITING_CLASSIFICATION_REVIEW" || value === "AWAITING_REPLY_APPROVAL";
+  const resolved = value === "RESOLVED";
+  const tone = needsAction
+    ? "bg-accent/10 text-accent"
+    : resolved
+      ? "bg-resolved-soft text-resolved"
+      : "bg-low-soft text-muted";
   return (
-    <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${needsAction ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-600"}`}>
+    <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium ${tone}`}>
+      {stateIcon[value] ?? <Clock size={12} />}
       {stateLabel[value] ?? value}
     </span>
   );
